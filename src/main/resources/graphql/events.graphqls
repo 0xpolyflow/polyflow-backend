@@ -1,0 +1,340 @@
+scalar Long
+scalar BigInteger
+scalar UUID
+scalar DateTime
+scalar Duration
+
+## ScreenState
+type ScreenState {
+    w: Int!
+    h: Int!
+}
+
+input ScreenStateInput {
+    w: Int!
+    h: Int!
+}
+
+## DeviceState
+type DeviceState {
+    os: String
+    browser: String
+    country: String
+    screen: ScreenState
+    walletProvider: String!
+}
+
+input DeviceStateInput {
+    os: String
+    browser: String
+    country: String
+    screen: ScreenStateInput
+    walletProvider: String!
+}
+
+## EventTrackerModel
+type EventTrackerModel {
+    eventTracker: String!
+    userId: String!
+    sessionId: String!
+    utmSource: String
+    utmMedium: String
+    utmCampaign: String
+    utmContent: String
+    utmTerm: String
+    origin: String
+    path: String
+}
+
+input EventTrackerModelInput {
+    eventTracker: String!
+    userId: String!
+    sessionId: String!
+    utmSource: String
+    utmMedium: String
+    utmCampaign: String
+    utmContent: String
+    utmTerm: String
+    origin: String
+    path: String
+}
+
+## NetworkState
+type NetworkState {
+    chainId: Long!
+    gasPrice: BigInteger!
+    blockHeight: BigInteger!
+}
+
+input NetworkStateInput {
+    chainId: Long!
+    gasPrice: BigInteger!
+    blockHeight: BigInteger!
+}
+
+enum TxStatus {
+    PENDING,
+    SUCCESS,
+    FAILURE
+}
+
+## TxData
+type TxData {
+    from: String!
+    to: String
+    value: BigInteger
+    input: String
+    nonce: BigInteger!
+    gas: BigInteger!
+    gasPrice: BigInteger!
+    maxFeePerGas: BigInteger
+    maxPriorityFeePerGas: BigInteger
+    v: String
+    r: String
+    s: String
+    hash: String
+    status: TxStatus!
+}
+
+input TxDataInput {
+    from: String!
+    to: String
+    value: BigInteger
+    input: String
+    nonce: BigInteger!
+    gas: BigInteger!
+    gasPrice: BigInteger!
+    maxFeePerGas: BigInteger
+    maxPriorityFeePerGas: BigInteger
+    v: String
+    r: String
+    s: String
+    hash: String
+    status: TxStatus!
+}
+
+## WalletState
+type WalletState {
+    walletAddress: String!
+    gasBalance: BigInteger!
+    nonce: BigInteger!
+    networkId: Long!
+}
+
+input WalletStateInput {
+    walletAddress: String!
+    gasBalance: BigInteger!
+    nonce: BigInteger!
+    networkId: Long!
+}
+
+## WalletConnectedEvent
+type WalletConnectedEvent {
+    id: ID!
+    projectId: UUID!
+    createdAt: DateTime!
+    tracker: EventTrackerModel!
+    wallet: WalletState!
+    device: DeviceState!
+    network: NetworkState!
+}
+
+input WalletConnectedEventInput {
+    tracker: EventTrackerModelInput!
+    wallet: WalletStateInput!
+    device: DeviceStateInput!
+    network: NetworkStateInput!
+}
+
+## UserLandedEvent
+type UserLandedEvent {
+    id: ID!
+    projectId: UUID!
+    createdAt: DateTime!
+    tracker: EventTrackerModel!
+    wallet: WalletState
+    device: DeviceState!
+    network: NetworkState
+}
+
+input UserLandedEventInput {
+    tracker: EventTrackerModelInput!
+    wallet: WalletStateInput
+    device: DeviceStateInput!
+    network: NetworkStateInput
+}
+
+## TxRequestEvent
+type TxRequestEvent {
+    id: ID!
+    projectId: UUID!
+    createdAt: DateTime!
+    tracker: EventTrackerModel!
+    wallet: WalletState!
+    device: DeviceState!
+    network: NetworkState!
+    tx: TxData!
+}
+
+input TxRequestEventInput {
+    tracker: EventTrackerModelInput!
+    wallet: WalletStateInput!
+    device: DeviceStateInput!
+    network: NetworkStateInput!
+    tx: TxDataInput!
+}
+
+## ErrorEvent
+type ErrorEvent {
+    id: ID!
+    projectId: UUID!
+    createdAt: DateTime!
+    tracker: EventTrackerModel!
+    errors: [String!]!
+    wallet: WalletState
+    device: DeviceState!
+    network: NetworkState
+}
+
+input ErrorEventInput {
+    tracker: EventTrackerModelInput!
+    errors: [String!]!
+    wallet: WalletStateInput
+    device: DeviceStateInput!
+    network: NetworkStateInput
+}
+
+## BlockchainErrorEvent
+type BlockchainErrorEvent {
+    id: ID!
+    projectId: UUID!
+    createdAt: DateTime!
+    tracker: EventTrackerModel!
+    errors: [String!]!
+    wallet: WalletState!
+    device: DeviceState!
+    network: NetworkState!
+    tx: TxData!
+}
+
+input BlockchainErrorEventInput {
+    tracker: EventTrackerModelInput!
+    errors: [String!]!
+    wallet: WalletStateInput!
+    device: DeviceStateInput!
+    network: NetworkStateInput!
+    tx: TxDataInput!
+}
+
+## All event types
+union Event = WalletConnectedEvent | TxRequestEvent | ErrorEvent | BlockchainErrorEvent | UserLandedEvent
+
+type IntTimespanValues {
+    from: DateTime!
+    to: DateTime!
+    value: Int!
+}
+
+type AverageTimespanValues {
+    from: DateTime!
+    to: DateTime!
+    averageValue: Float!
+}
+
+type MovingAverageTimespanValues {
+    movingAverages: [AverageTimespanValues!]!
+    averageValue: Float!
+}
+
+type IntTimespanWithAverage {
+    values: [IntTimespanValues!]!
+    averageValue: Float
+}
+
+type WalletConnectionsAndTransactionsInfo {
+    name: String!
+    totalWalletConnections: Int!
+    uniqueWalletConnections: Int!
+    executedTransactions: Int!
+}
+
+input EventFilter {
+    tracker: EventTrackerModelInput
+    wallet: WalletStateInput
+    device: DeviceStateInput
+    network: NetworkStateInput
+}
+
+type Query {
+    findEvents(from: DateTime, to: DateTime, projectId: UUID!, filter: EventFilter): [Event!]!
+
+    #    - All queries should be fetchable with a time range: e.g.
+    #    - from (unix timestamp)
+    #    - to (unix timestamp)
+    #    If time range is ommited - it will query the entire dataset
+    #
+    #    All queries can be fetched as a single result or as an array (for making line graphs and charts). If fetched as a chart, another query is needed:
+    #    - granularity - how granular the returned data should be (e.g. 1 'days' or 30 'minutes')
+    #
+    #    Queries
+    #    - total connected unique wallets
+    #    - total new wallets (wallets that have connected in the specified time range, that haven't connected at any time before)
+    #    - daily active wallets in time range (average daily active wallets for all days in range)
+    #    - active wallet is one which has connected at least once
+    #    - total transactions in date range
+    #    - total successful transactions (actually singed & mined)
+    #    - total cancelled transactions (created tx, never signed)
+    #    - average transactions per user per day
+    #    - average transactions per day
+    #    - max transactions per day
+    #    - min transactions per day
+    #    - wallet providers (connected wallets)
+    #       - list of wallet providers with the number of wallet connections
+    #    - wallet providers (executed transactions)
+    #       - list of wallet providers with the number of transactions
+    #    - unique wallet provider list (connected wallets)
+    #       - list of wallet providers with the number of wallet connections from unique wallets
+    #    - wallet connections by country
+    #    - wallet connections by country (unique wallets)
+    #    - executed transactions by country
+    #    - executed transactions by country (unique wallets)
+    #    - transaction browsers
+    #    - transaction browsers (unique wallets)
+
+    totalConnectedWallets(from: DateTime, to: DateTime, granularity: Duration, projectId: UUID!, filter: EventFilter): [IntTimespanValues!]!
+
+    totalNewWallets(from: DateTime, to: DateTime, granularity: Duration, projectId: UUID!, filter: EventFilter): [IntTimespanValues!]!
+
+    periodActiveWallets(from: DateTime, to: DateTime, granularity: Duration, projectId: UUID!, filter: EventFilter): IntTimespanWithAverage!
+
+    totalTransactions(from: DateTime, to: DateTime, granularity: Duration, projectId: UUID!, filter: EventFilter): [IntTimespanValues!]!
+
+    totalSuccessfulTransactions(from: DateTime, to: DateTime, granularity: Duration, projectId: UUID!, filter: EventFilter): [IntTimespanValues!]!
+
+    totalCancelledTransactions(from: DateTime, to: DateTime, granularity: Duration, projectId: UUID!, filter: EventFilter): [IntTimespanValues!]!
+
+    averageTransactionsPerUser(from: DateTime, to: DateTime, granularity: Duration, projectId: UUID!, filter: EventFilter): [AverageTimespanValues!]!
+
+    averageTransactions(from: DateTime, to: DateTime, granularity: Duration, projectId: UUID!, filter: EventFilter): MovingAverageTimespanValues!
+
+    minTransactionsInPeriod(from: DateTime, to: DateTime, granularity: Duration, projectId: UUID!, filter: EventFilter): Int!
+
+    maxTransactionsInPeriod(from: DateTime, to: DateTime, granularity: Duration, projectId: UUID!, filter: EventFilter): Int!
+
+    listWalletProviders(projectId: UUID!, filter: EventFilter): [WalletConnectionsAndTransactionsInfo!]!
+
+    listCountries(projectId: UUID!, filter: EventFilter): [WalletConnectionsAndTransactionsInfo!]!
+
+    listBrowsers(projectId: UUID!, filter: EventFilter): [WalletConnectionsAndTransactionsInfo!]!
+}
+
+type Mutation {
+    createWalletConnectedEvent(event: WalletConnectedEventInput!): WalletConnectedEvent!
+    createTxRequestEvent(event: TxRequestEventInput!): TxRequestEvent!
+    createErrorEvent(event: ErrorEventInput!): ErrorEvent!
+    createBlockchainErrorEvent(event: BlockchainErrorEventInput!): BlockchainErrorEvent!
+    createUserLandedEvent(event: UserLandedEventInput!): UserLandedEvent!
+
+    updateTxRequestEventTxStatus(id: UUID!, newStatus: TxStatus!): TxRequestEvent!
+    updateBlockchainErrorEventTxStatus(id: UUID!, newStatus: TxStatus!): BlockchainErrorEvent!
+}
