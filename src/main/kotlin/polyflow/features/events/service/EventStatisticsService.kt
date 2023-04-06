@@ -15,12 +15,12 @@ interface EventStatisticsService {
     fun totalConnectedWallets(
         query: StatisticsQuery,
         userId: UserId
-    ): List<IntTimespanValues>
+    ): Array<IntTimespanValues>
 
     fun totalNewWallets(
         query: StatisticsQuery,
         userId: UserId
-    ): List<IntTimespanValues>
+    ): Array<IntTimespanValues>
 
     fun periodActiveWallets(
         query: StatisticsQuery,
@@ -30,22 +30,22 @@ interface EventStatisticsService {
     fun totalTransactions(
         query: StatisticsQuery,
         userId: UserId
-    ): List<IntTimespanValues>
+    ): Array<IntTimespanValues>
 
     fun totalSuccessfulTransactions(
         query: StatisticsQuery,
         userId: UserId
-    ): List<IntTimespanValues>
+    ): Array<IntTimespanValues>
 
     fun totalCancelledTransactions(
         query: StatisticsQuery,
         userId: UserId
-    ): List<IntTimespanValues>
+    ): Array<IntTimespanValues>
 
     fun averageTransactionsPerUser(
         query: StatisticsQuery,
         userId: UserId
-    ): List<AverageTimespanValues>
+    ): Array<AverageTimespanValues>
 
     fun averageTransactions(
         query: StatisticsQuery,
@@ -66,17 +66,17 @@ interface EventStatisticsService {
         projectId: ProjectId,
         userId: UserId,
         eventFilter: EventFilter?
-    ): List<WalletConnectionsAndTransactionsInfo>
+    ): Array<WalletConnectionsAndTransactionsInfo>
 
     fun listCountries(
         projectId: ProjectId,
         userId: UserId,
         eventFilter: EventFilter?
-    ): List<WalletConnectionsAndTransactionsInfo>
+    ): Array<WalletConnectionsAndTransactionsInfo>
 
     fun listBrowsers(
         projectId: ProjectId,
         userId: UserId,
         eventFilter: EventFilter?
-    ): List<WalletConnectionsAndTransactionsInfo>
+    ): Array<WalletConnectionsAndTransactionsInfo>
 }

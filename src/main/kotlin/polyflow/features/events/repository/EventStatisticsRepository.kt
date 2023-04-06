@@ -11,17 +11,21 @@ import polyflow.generated.jooq.id.ProjectId
 
 @Suppress("TooManyFunctions")
 interface EventStatisticsRepository {
-    fun totalConnectedWallets(query: StatisticsQuery): List<IntTimespanValues>
-    fun totalNewWallets(query: StatisticsQuery): List<IntTimespanValues>
+    fun totalConnectedWallets(query: StatisticsQuery): Array<IntTimespanValues>
+    fun totalNewWallets(query: StatisticsQuery): Array<IntTimespanValues>
     fun periodActiveWallets(query: StatisticsQuery): IntTimespanWithAverage
-    fun totalTransactions(query: StatisticsQuery): List<IntTimespanValues>
-    fun totalSuccessfulTransactions(query: StatisticsQuery): List<IntTimespanValues>
-    fun totalCancelledTransactions(query: StatisticsQuery): List<IntTimespanValues>
-    fun averageTransactionsPerUser(query: StatisticsQuery): List<AverageTimespanValues>
+    fun totalTransactions(query: StatisticsQuery): Array<IntTimespanValues>
+    fun totalSuccessfulTransactions(query: StatisticsQuery): Array<IntTimespanValues>
+    fun totalCancelledTransactions(query: StatisticsQuery): Array<IntTimespanValues>
+    fun averageTransactionsPerUser(query: StatisticsQuery): Array<AverageTimespanValues>
     fun averageTransactions(query: StatisticsQuery): MovingAverageTimespanValues
     fun minTransactionsInPeriod(query: StatisticsQuery): Int
     fun maxTransactionsInPeriod(query: StatisticsQuery): Int
-    fun listWalletProviders(projectId: ProjectId, eventFilter: EventFilter?): List<WalletConnectionsAndTransactionsInfo>
-    fun listCountries(projectId: ProjectId, eventFilter: EventFilter?): List<WalletConnectionsAndTransactionsInfo>
-    fun listBrowsers(projectId: ProjectId, eventFilter: EventFilter?): List<WalletConnectionsAndTransactionsInfo>
+    fun listWalletProviders(
+        projectId: ProjectId,
+        eventFilter: EventFilter?
+    ): Array<WalletConnectionsAndTransactionsInfo>
+
+    fun listCountries(projectId: ProjectId, eventFilter: EventFilter?): Array<WalletConnectionsAndTransactionsInfo>
+    fun listBrowsers(projectId: ProjectId, eventFilter: EventFilter?): Array<WalletConnectionsAndTransactionsInfo>
 }

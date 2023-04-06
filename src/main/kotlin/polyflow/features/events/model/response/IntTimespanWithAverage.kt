@@ -1,6 +1,6 @@
 package polyflow.features.events.model.response
 
 data class IntTimespanWithAverage(
-    val values: List<IntTimespanValues>,
+    val values: Array<IntTimespanValues>,
     val averageValue: Double
 )

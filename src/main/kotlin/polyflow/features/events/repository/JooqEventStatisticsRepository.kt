@@ -39,7 +39,7 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
     companion object : KLogging()
 
     // TODO improve efficiency
-    override fun totalConnectedWallets(query: StatisticsQuery): List<IntTimespanValues> {
+    override fun totalConnectedWallets(query: StatisticsQuery): Array<IntTimespanValues> {
         logger.debug { "Find total connected wallets, query: $query" }
 
         return fetchUniqueWalletConnectedEvents(query)
@@ -51,7 +51,7 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
     }
 
     // TODO improve efficiency
-    override fun totalNewWallets(query: StatisticsQuery): List<IntTimespanValues> {
+    override fun totalNewWallets(query: StatisticsQuery): Array<IntTimespanValues> {
         logger.debug { "Find total new wallets, query: $query" }
 
         val table = EventTables.WalletConnectedTable
@@ -101,12 +101,12 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
 
         return IntTimespanWithAverage(
             values = perPeriodValues,
-            averageValue
+            averageValue = averageValue
         )
     }
 
     // TODO improve efficiency
-    override fun totalTransactions(query: StatisticsQuery): List<IntTimespanValues> {
+    override fun totalTransactions(query: StatisticsQuery): Array<IntTimespanValues> {
         logger.debug { "Find total transactions, query: $query" }
 
         return fetchTransactions(query) { emptyList() }
@@ -118,7 +118,7 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
     }
 
     // TODO improve efficiency
-    override fun totalSuccessfulTransactions(query: StatisticsQuery): List<IntTimespanValues> {
+    override fun totalSuccessfulTransactions(query: StatisticsQuery): Array<IntTimespanValues> {
         logger.debug { "Find successful transactions, query: $query" }
 
         return fetchTransactions(query) { listOf(it.TX.subfield(TxData.TX_DATA.STATUS).eq(TxStatus.SUCCESS)) }
@@ -130,7 +130,7 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
     }
 
     // TODO improve efficiency
-    override fun totalCancelledTransactions(query: StatisticsQuery): List<IntTimespanValues> {
+    override fun totalCancelledTransactions(query: StatisticsQuery): Array<IntTimespanValues> {
         logger.debug { "Find cancelled transactions, query: $query" }
 
         return fetchTransactions(query) { listOf(it.TX.subfield(TxData.TX_DATA.STATUS).eq(TxStatus.FAILURE)) }
@@ -142,7 +142,7 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
     }
 
     // TODO improve efficiency
-    override fun averageTransactionsPerUser(query: StatisticsQuery): List<AverageTimespanValues> {
+    override fun averageTransactionsPerUser(query: StatisticsQuery): Array<AverageTimespanValues> {
         logger.debug { "Find average transactions per user, query: $query" }
 
         val table = EventTables.TxRequestTable
@@ -190,7 +190,7 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
                 granularity = query.granularity,
                 uniqueInRange = false
             )
-            .minOf { it.value }
+            .minOfOrNull { it.value } ?: 0
     }
 
     // TODO improve efficiency
@@ -203,43 +203,44 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
                 granularity = query.granularity,
                 uniqueInRange = false
             )
-            .maxOf { it.value }
+            .maxOfOrNull { it.value } ?: 0
     }
 
     // TODO improve efficiency
     override fun listWalletProviders(
         projectId: ProjectId,
         eventFilter: EventFilter?
-    ): List<WalletConnectionsAndTransactionsInfo> {
+    ): Array<WalletConnectionsAndTransactionsInfo> {
         logger.debug { "List wallet providers, projectId: $projectId, utmFilter: $eventFilter" }
-        return listStats(projectId, EventTables.WalletConnectedTable.walletProvider, eventFilter)
+        return listStats(projectId, { it.walletProvider }, eventFilter)
     }
 
     // TODO improve efficiency
     override fun listCountries(
         projectId: ProjectId,
         eventFilter: EventFilter?
-    ): List<WalletConnectionsAndTransactionsInfo> {
+    ): Array<WalletConnectionsAndTransactionsInfo> {
         logger.debug { "List countries, projectId: $projectId, utmFilter: $eventFilter" }
-        return listStats(projectId, EventTables.WalletConnectedTable.country, eventFilter)
+        return listStats(projectId, { it.country }, eventFilter)
     }
 
     // TODO improve efficiency
     override fun listBrowsers(
         projectId: ProjectId,
         eventFilter: EventFilter?
-    ): List<WalletConnectionsAndTransactionsInfo> {
+    ): Array<WalletConnectionsAndTransactionsInfo> {
         logger.debug { "List browsers, projectId: $projectId, utmFilter: $eventFilter" }
-        return listStats(projectId, EventTables.WalletConnectedTable.browser, eventFilter)
+        return listStats(projectId, { it.browser }, eventFilter)
     }
 
     private fun listStats(
         projectId: ProjectId,
-        key: Field<String?>,
+        key: (EventTable<*, *>) -> Field<out String?>,
         eventFilter: EventFilter?
-    ): List<WalletConnectionsAndTransactionsInfo> {
+    ): Array<WalletConnectionsAndTransactionsInfo> {
+        val walletConnectedKey = key(EventTables.WalletConnectedTable)
         val walletCounts = dslContext.select(
-            key,
+            walletConnectedKey,
             DSL.count(EventTables.WalletConnectedTable.walletAddress),
             DSL.countDistinct(EventTables.WalletConnectedTable.walletAddress)
         )
@@ -252,8 +253,8 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
                     )
                 )
             )
-            .groupBy(key)
-            .orderBy(key)
+            .groupBy(walletConnectedKey)
+            .orderBy(walletConnectedKey)
             .fetchMap({ it.component1() }) {
                 WalletConnectionsAndTransactionsInfo(
                     name = it.component1() ?: "unknown",
@@ -263,7 +264,8 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
                 )
             }
 
-        val transactionCounts = dslContext.select(key, DSL.count(EventTables.TxRequestTable.createdAt))
+        val txRequestKey = key(EventTables.TxRequestTable)
+        val transactionCounts = dslContext.select(txRequestKey, DSL.count(EventTables.TxRequestTable.createdAt))
             .from(EventTables.TxRequestTable.db)
             .where(
                 DSL.and(
@@ -273,8 +275,8 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
                     )
                 )
             )
-            .groupBy(key)
-            .orderBy(key)
+            .groupBy(txRequestKey)
+            .orderBy(txRequestKey)
             .fetchMap({ it.component1() }) {
                 WalletConnectionsAndTransactionsInfo(
                     name = it.component1() ?: "unknown",
@@ -295,7 +297,7 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
                     uniqueWalletConnections = walletCount?.uniqueWalletConnections ?: 0,
                     executedTransactions = transactionCount?.executedTransactions ?: 0
                 )
-            }
+            }.toTypedArray()
     }
 
     private fun fetchTransactions(
@@ -341,8 +343,8 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
     private fun List<Pair<Pair<TransactionHash?, String?>, UtcDateTime>>.groupByUserAverageByDuration(
         from: UtcDateTime?,
         granularity: Duration?
-    ): List<AverageTimespanValues> {
-        val start = from ?: firstOrNull()?.component2() ?: return emptyList()
+    ): Array<AverageTimespanValues> {
+        val start = from ?: firstOrNull()?.component2() ?: return emptyArray()
 
         val grouping = when (granularity) {
             null -> mapOf(Pair(start, last().component2()) to this)
@@ -359,15 +361,15 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
                 to = it.key.second.value,
                 averageValue = averagePerUserInRange
             )
-        }
+        }.toTypedArray()
     }
 
     private fun <T> List<Pair<T, UtcDateTime>>.groupByDuration(
         from: UtcDateTime?,
         granularity: Duration?,
         uniqueInRange: Boolean
-    ): List<IntTimespanValues> {
-        val start = from ?: firstOrNull()?.component2() ?: return emptyList()
+    ): Array<IntTimespanValues> {
+        val start = from ?: firstOrNull()?.component2() ?: return emptyArray()
 
         val grouping = when (granularity) {
             null -> mapOf(Pair(start, last().component2()) to this)
@@ -385,7 +387,7 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
                 to = it.key.second.value,
                 value = size
             )
-        }
+        }.toTypedArray()
     }
 
     private fun <T> Pair<T, UtcDateTime>.groupByExactDuration(

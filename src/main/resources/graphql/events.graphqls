@@ -15,6 +15,11 @@ input ScreenStateInput {
     h: Int!
 }
 
+input ScreenStateFilter {
+    w: Int
+    h: Int
+}
+
 ## DeviceState
 type DeviceState {
     os: String
@@ -30,6 +35,14 @@ input DeviceStateInput {
     country: String
     screen: ScreenStateInput
     walletProvider: String!
+}
+
+input DeviceStateFilter {
+    os: String
+    browser: String
+    country: String
+    screen: ScreenStateFilter
+    walletProvider: String
 }
 
 ## EventTrackerModel
@@ -59,6 +72,19 @@ input EventTrackerModelInput {
     path: String
 }
 
+input EventTrackerModelFilter {
+    eventTracker: String
+    userId: String
+    sessionId: String
+    utmSource: String
+    utmMedium: String
+    utmCampaign: String
+    utmContent: String
+    utmTerm: String
+    origin: String
+    path: String
+}
+
 ## NetworkState
 type NetworkState {
     chainId: Long!
@@ -70,6 +96,12 @@ input NetworkStateInput {
     chainId: Long!
     gasPrice: BigInteger!
     blockHeight: BigInteger!
+}
+
+input NetworkStateFilter {
+    chainId: Long
+    gasPrice: BigInteger
+    blockHeight: BigInteger
 }
 
 enum TxStatus {
@@ -126,6 +158,13 @@ input WalletStateInput {
     gasBalance: BigInteger!
     nonce: BigInteger!
     networkId: Long!
+}
+
+input WalletStateFilter {
+    walletAddress: String
+    gasBalance: BigInteger
+    nonce: BigInteger
+    networkId: Long
 }
 
 ## WalletConnectedEvent
@@ -259,10 +298,10 @@ type WalletConnectionsAndTransactionsInfo {
 }
 
 input EventFilter {
-    tracker: EventTrackerModelInput
-    wallet: WalletStateInput
-    device: DeviceStateInput
-    network: NetworkStateInput
+    tracker: EventTrackerModelFilter
+    wallet: WalletStateFilter
+    device: DeviceStateFilter
+    network: NetworkStateFilter
 }
 
 type Query {

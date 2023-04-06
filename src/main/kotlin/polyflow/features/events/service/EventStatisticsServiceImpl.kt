@@ -27,7 +27,7 @@ class EventStatisticsServiceImpl(
     override fun totalConnectedWallets(
         query: StatisticsQuery,
         userId: UserId
-    ): List<IntTimespanValues> {
+    ): Array<IntTimespanValues> {
         logger.debug { "Request to fetch total connected wallets, query: $query, userId: $userId" }
 
         requireProjectReadAccess(userId, query.projectId)
@@ -38,7 +38,7 @@ class EventStatisticsServiceImpl(
     override fun totalNewWallets(
         query: StatisticsQuery,
         userId: UserId
-    ): List<IntTimespanValues> {
+    ): Array<IntTimespanValues> {
         logger.debug { "Request to fetch new connected wallets, query: $query, userId: $userId" }
 
         requireProjectReadAccess(userId, query.projectId)
@@ -54,7 +54,7 @@ class EventStatisticsServiceImpl(
         return eventStatisticsRepository.periodActiveWallets(query)
     }
 
-    override fun totalTransactions(query: StatisticsQuery, userId: UserId): List<IntTimespanValues> {
+    override fun totalTransactions(query: StatisticsQuery, userId: UserId): Array<IntTimespanValues> {
         logger.debug { "Request to fetch total transactions, query: $query, userId: $userId" }
 
         requireProjectReadAccess(userId, query.projectId)
@@ -62,7 +62,7 @@ class EventStatisticsServiceImpl(
         return eventStatisticsRepository.totalTransactions(query)
     }
 
-    override fun totalSuccessfulTransactions(query: StatisticsQuery, userId: UserId): List<IntTimespanValues> {
+    override fun totalSuccessfulTransactions(query: StatisticsQuery, userId: UserId): Array<IntTimespanValues> {
         logger.debug { "Request to fetch total successful transactions, query: $query, userId: $userId" }
 
         requireProjectReadAccess(userId, query.projectId)
@@ -70,7 +70,7 @@ class EventStatisticsServiceImpl(
         return eventStatisticsRepository.totalSuccessfulTransactions(query)
     }
 
-    override fun totalCancelledTransactions(query: StatisticsQuery, userId: UserId): List<IntTimespanValues> {
+    override fun totalCancelledTransactions(query: StatisticsQuery, userId: UserId): Array<IntTimespanValues> {
         logger.debug { "Request to fetch total cancelled transactions, query: $query, userId: $userId" }
 
         requireProjectReadAccess(userId, query.projectId)
@@ -78,7 +78,7 @@ class EventStatisticsServiceImpl(
         return eventStatisticsRepository.totalCancelledTransactions(query)
     }
 
-    override fun averageTransactionsPerUser(query: StatisticsQuery, userId: UserId): List<AverageTimespanValues> {
+    override fun averageTransactionsPerUser(query: StatisticsQuery, userId: UserId): Array<AverageTimespanValues> {
         logger.debug { "Request to average transactions per user, query: $query, userId: $userId" }
 
         requireProjectReadAccess(userId, query.projectId)
@@ -114,7 +114,7 @@ class EventStatisticsServiceImpl(
         projectId: ProjectId,
         userId: UserId,
         eventFilter: EventFilter?
-    ): List<WalletConnectionsAndTransactionsInfo> {
+    ): Array<WalletConnectionsAndTransactionsInfo> {
         logger.debug { "List wallet providers, projectId: $projectId, userId: $userId, eventFilter: $eventFilter" }
 
         requireProjectReadAccess(userId, projectId)
@@ -126,7 +126,7 @@ class EventStatisticsServiceImpl(
         projectId: ProjectId,
         userId: UserId,
         eventFilter: EventFilter?
-    ): List<WalletConnectionsAndTransactionsInfo> {
+    ): Array<WalletConnectionsAndTransactionsInfo> {
         logger.debug { "List countries, projectId: $projectId, userId: $userId, eventFilter: $eventFilter" }
 
         requireProjectReadAccess(userId, projectId)
@@ -138,7 +138,7 @@ class EventStatisticsServiceImpl(
         projectId: ProjectId,
         userId: UserId,
         eventFilter: EventFilter?
-    ): List<WalletConnectionsAndTransactionsInfo> {
+    ): Array<WalletConnectionsAndTransactionsInfo> {
         logger.debug { "List browsers, projectId: $projectId, userId: $userId, eventFilter: $eventFilter" }
 
         requireProjectReadAccess(userId, projectId)

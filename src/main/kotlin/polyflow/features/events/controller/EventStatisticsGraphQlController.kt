@@ -38,7 +38,7 @@ class EventStatisticsGraphQlController(
         @Argument granularity: Duration?,
         @Argument projectId: UUID,
         @Argument filter: EventFilter?
-    ): List<IntTimespanValues> {
+    ): Array<IntTimespanValues> {
         val user = Util.resolveUser(userRepository)
         return eventStatisticsService.totalConnectedWallets(
             StatisticsQuery(
@@ -59,7 +59,7 @@ class EventStatisticsGraphQlController(
         @Argument granularity: Duration?,
         @Argument projectId: UUID,
         @Argument filter: EventFilter?
-    ): List<IntTimespanValues> {
+    ): Array<IntTimespanValues> {
         val user = Util.resolveUser(userRepository)
         return eventStatisticsService.totalNewWallets(
             StatisticsQuery(
@@ -101,7 +101,7 @@ class EventStatisticsGraphQlController(
         @Argument granularity: Duration?,
         @Argument projectId: UUID,
         @Argument filter: EventFilter?
-    ): List<IntTimespanValues> {
+    ): Array<IntTimespanValues> {
         val user = Util.resolveUser(userRepository)
         return eventStatisticsService.totalTransactions(
             StatisticsQuery(
@@ -122,7 +122,7 @@ class EventStatisticsGraphQlController(
         @Argument granularity: Duration?,
         @Argument projectId: UUID,
         @Argument filter: EventFilter?
-    ): List<IntTimespanValues> {
+    ): Array<IntTimespanValues> {
         val user = Util.resolveUser(userRepository)
         return eventStatisticsService.totalSuccessfulTransactions(
             StatisticsQuery(
@@ -143,7 +143,7 @@ class EventStatisticsGraphQlController(
         @Argument granularity: Duration?,
         @Argument projectId: UUID,
         @Argument filter: EventFilter?
-    ): List<IntTimespanValues> {
+    ): Array<IntTimespanValues> {
         val user = Util.resolveUser(userRepository)
         return eventStatisticsService.totalCancelledTransactions(
             StatisticsQuery(
@@ -164,7 +164,7 @@ class EventStatisticsGraphQlController(
         @Argument granularity: Duration?,
         @Argument projectId: UUID,
         @Argument filter: EventFilter?
-    ): List<AverageTimespanValues> {
+    ): Array<AverageTimespanValues> {
         val user = Util.resolveUser(userRepository)
         return eventStatisticsService.averageTransactionsPerUser(
             StatisticsQuery(
@@ -245,7 +245,7 @@ class EventStatisticsGraphQlController(
     fun listWalletProviders(
         @Argument projectId: UUID,
         @Argument filter: EventFilter?
-    ): List<WalletConnectionsAndTransactionsInfo> {
+    ): Array<WalletConnectionsAndTransactionsInfo> {
         val user = Util.resolveUser(userRepository)
         return eventStatisticsService.listWalletProviders(
             projectId = ProjectId(projectId),
@@ -258,7 +258,7 @@ class EventStatisticsGraphQlController(
     fun listCountries(
         @Argument projectId: UUID,
         @Argument filter: EventFilter?
-    ): List<WalletConnectionsAndTransactionsInfo> {
+    ): Array<WalletConnectionsAndTransactionsInfo> {
         val user = Util.resolveUser(userRepository)
         return eventStatisticsService.listCountries(
             projectId = ProjectId(projectId),
@@ -271,7 +271,7 @@ class EventStatisticsGraphQlController(
     fun listBrowsers(
         @Argument projectId: UUID,
         @Argument filter: EventFilter?
-    ): List<WalletConnectionsAndTransactionsInfo> {
+    ): Array<WalletConnectionsAndTransactionsInfo> {
         val user = Util.resolveUser(userRepository)
         return eventStatisticsService.listBrowsers(
             projectId = ProjectId(projectId),
@@ -280,11 +280,11 @@ class EventStatisticsGraphQlController(
         )
     }
 
-    private fun List<IntTimespanValues>.orSingleIntElement(from: OffsetDateTime?, to: OffsetDateTime?) =
-        ifEmpty { listOf(IntTimespanValues(from ?: MIN_DATETIME, to ?: now(), 0)) }
+    private fun Array<IntTimespanValues>.orSingleIntElement(from: OffsetDateTime?, to: OffsetDateTime?) =
+        ifEmpty { arrayOf(IntTimespanValues(from ?: MIN_DATETIME, to ?: now(), 0)) }
 
-    private fun List<AverageTimespanValues>.orSingleDoubleElement(from: OffsetDateTime?, to: OffsetDateTime?) =
-        ifEmpty { listOf(AverageTimespanValues(from ?: MIN_DATETIME, to ?: now(), 0.0)) }
+    private fun Array<AverageTimespanValues>.orSingleDoubleElement(from: OffsetDateTime?, to: OffsetDateTime?) =
+        ifEmpty { arrayOf(AverageTimespanValues(from ?: MIN_DATETIME, to ?: now(), 0.0)) }
 
     private fun now() = UtcDateTime(OffsetDateTime.now()).value // TODO use provider instead!
 }

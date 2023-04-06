@@ -2,10 +2,10 @@ package polyflow.features.events.model.params
 
 import org.jooq.Condition
 import org.jooq.impl.DSL
-import polyflow.features.events.model.DeviceState
-import polyflow.features.events.model.EventTrackerModel
-import polyflow.features.events.model.NetworkState
-import polyflow.features.events.model.WalletState
+import polyflow.features.events.model.request.filter.DeviceStateFilter
+import polyflow.features.events.model.request.filter.EventTrackerModelFilter
+import polyflow.features.events.model.request.filter.NetworkStateFilter
+import polyflow.features.events.model.request.filter.WalletStateFilter
 import polyflow.features.events.repository.EventTable
 import polyflow.features.events.repository.subfield
 import polyflow.util.ChainId
@@ -17,10 +17,10 @@ import polyflow.generated.jooq.udt.ScreenState as SCST
 import polyflow.generated.jooq.udt.WalletState as WS
 
 data class EventFilter(
-    val tracker: EventTrackerModel?,
-    val wallet: WalletState?,
-    val device: DeviceState?,
-    val network: NetworkState?
+    val tracker: EventTrackerModelFilter?,
+    val wallet: WalletStateFilter?,
+    val device: DeviceStateFilter?,
+    val network: NetworkStateFilter?
 ) {
     fun createCondition(eventTable: EventTable<*, *>): Condition? {
         val etm = ETM.EVENT_TRACKER_MODEL
