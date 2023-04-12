@@ -11,11 +11,11 @@ enum class ErrorCode(val graphQlErrorType: ErrorType) {
     @Description("Access to the provided resource is not allowed for the current user")
     ACCESS_FORBIDDEN(ErrorType.FORBIDDEN),
 
+    @Description("Indicates that one or more fields in the request body has an invalid value")
+    INVALID_REQUEST_BODY(ErrorType.BAD_REQUEST),
+
     @Description("Provided authentication token has invalid format")
     BAD_AUTHENTICATION(ErrorType.FORBIDDEN),
-
-    @Description("The project already has an API key generated and no more keys can be generated for that project")
-    API_KEY_ALREADY_EXISTS(ErrorType.BAD_REQUEST),
 
     @Description("The provided API key does not exist and is therefore invalid")
     NON_EXISTENT_API_KEY(ErrorType.NOT_FOUND),
@@ -30,5 +30,14 @@ enum class ErrorCode(val graphQlErrorType: ErrorType) {
     USER_SECURE_TOKEN_INVALID(ErrorType.BAD_REQUEST),
 
     @Description("Indicates that user account has not yet been verified")
-    USER_NOT_YET_VERIFIED(ErrorType.FORBIDDEN)
+    USER_NOT_YET_VERIFIED(ErrorType.FORBIDDEN),
+
+    @Description("Indicates that Stripe customer ID is not yet set; create Stripe session to resolve this")
+    STRIPE_CUSTOMER_ID_MISSING(ErrorType.BAD_REQUEST),
+
+    @Description("Active subscription is required to access this resource")
+    NO_ACTIVE_SUBSCRIPTION(ErrorType.FORBIDDEN),
+
+    @Description("Usage limit for this account has been reached; switch to a higher tier to increase the limit")
+    USAGE_LIMIT_EXCEEDED(ErrorType.FORBIDDEN)
 }

@@ -56,3 +56,11 @@ data class EmailProperties(
     val passwordResetEmailSubject: String,
     val passwordResetEmailTemplate: String
 )
+
+@ConstructorBinding
+@ConfigurationProperties("polyflow.stripe")
+data class StripeProperties(
+    val apiKey: String,
+    val endpointSecret: String,
+    val redirectDomain: String
+)

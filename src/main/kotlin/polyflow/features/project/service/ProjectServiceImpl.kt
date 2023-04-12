@@ -32,7 +32,7 @@ class ProjectServiceImpl(
     companion object : KLogging() {
         private const val API_KEY_BYTES = 33
         private const val API_KEY_PREFIX_LENGTH = 5
-        private val ENCODER = Base64.getEncoder()
+        private val ENCODER = Base64.getUrlEncoder()
     }
 
     override fun create(user: User, request: CreateProjectRequest): Project {

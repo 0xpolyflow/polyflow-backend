@@ -125,6 +125,7 @@ dependencies {
     implementation("io.github.microutils:kotlin-logging-jvm:${Versions.Dependencies.kotlinLogging}")
     implementation("io.sentry:sentry-spring-boot-starter:${Versions.Dependencies.sentry}")
     implementation("com.graphql-java:graphql-java-extended-scalars:${Versions.Dependencies.graphqlScalars}")
+    implementation("com.stripe:stripe-java:${Versions.Dependencies.stripe}")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.junit.jupiter:junit-jupiter-api")

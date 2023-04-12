@@ -274,6 +274,9 @@ class JooqProjectRepository(private val dslContext: DSLContext) : ProjectReposit
             passwordHash = passwordHash,
             accountType = accountType,
             registeredAt = registeredAt,
-            verifiedAt = verifiedAt
+            verifiedAt = verifiedAt,
+            stripeCustomerId = stripeCustomerId,
+            totalDomainLimit = totalDomainLimit,
+            totalSeatLimit = totalSeatLimit
         )
 }

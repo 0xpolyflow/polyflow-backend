@@ -102,3 +102,43 @@ class InvalidUserSecureTokenException : ServiceException(
         private const val serialVersionUID: Long = 1387167781755092912L
     }
 }
+
+class StripeCustomerIdMissing : ServiceException(
+    errorCode = ErrorCode.STRIPE_CUSTOMER_ID_MISSING,
+    httpStatus = HttpStatus.BAD_REQUEST,
+    message = "Stripe customer ID is missing - create Stripe session first"
+) {
+    companion object {
+        private const val serialVersionUID: Long = 3068323805695731551L
+    }
+}
+
+class WebhookException : ServiceException(
+    errorCode = ErrorCode.INVALID_REQUEST_BODY,
+    httpStatus = HttpStatus.BAD_REQUEST,
+    message = "Webhook data has invalid format"
+) {
+    companion object {
+        private const val serialVersionUID: Long = 7893680094807460298L
+    }
+}
+
+class NoActiveSubscriptionException : ServiceException(
+    errorCode = ErrorCode.NO_ACTIVE_SUBSCRIPTION,
+    httpStatus = HttpStatus.PAYMENT_REQUIRED,
+    message = "An active subscription is required to access this resource"
+) {
+    companion object {
+        private const val serialVersionUID: Long = 7193540635043038476L
+    }
+}
+
+class UsageLimitExceededException(limitedResource: String) : ServiceException(
+    errorCode = ErrorCode.USAGE_LIMIT_EXCEEDED,
+    httpStatus = HttpStatus.PAYMENT_REQUIRED,
+    message = "Usage limit has been exceeded for $limitedResource"
+) {
+    companion object {
+        private const val serialVersionUID: Long = 2498719280433221332L
+    }
+}

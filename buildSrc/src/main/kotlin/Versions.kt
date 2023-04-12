@@ -2,7 +2,7 @@ import org.gradle.api.JavaVersion
 
 object Versions {
 
-    const val project = "0.0.22"
+    const val project = "0.1.0"
 
     object Compile {
         const val kotlin = "1.7.20"
@@ -44,5 +44,6 @@ object Versions {
         const val postgresDriver = "42.5.0"
         const val sentry = "6.5.0"
         const val graphqlScalars = "18.3"
+        const val stripe = "22.15.0"
     }
 }

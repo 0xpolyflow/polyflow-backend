@@ -9,6 +9,9 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
+import polyflow.config.binding.annotation.ActiveSubscription
+import polyflow.config.binding.annotation.DomainLimited
+import polyflow.config.binding.annotation.SeatLimited
 import polyflow.config.binding.annotation.UserBinding
 import polyflow.features.project.model.request.CreateProjectRequest
 import polyflow.features.project.model.request.ProjectAccessRequest
@@ -30,7 +33,7 @@ class ProjectController(private val projectService: ProjectService) { // TODO te
 
     @PostMapping("/v1/projects")
     fun create(
-        @UserBinding user: User,
+        @UserBinding @ActiveSubscription user: User,
         @Valid @RequestBody requestBody: CreateProjectRequest
     ): ResponseEntity<ProjectResponse> =
         ResponseEntity.ok(ProjectResponse(projectService.create(user, requestBody)))
@@ -56,7 +59,7 @@ class ProjectController(private val projectService: ProjectService) { // TODO te
 
     @PatchMapping("/v1/projects/{id}/domains/add")
     fun addWhitelistedDomain(
-        @UserBinding user: User,
+        @UserBinding @DomainLimited user: User,
         @PathVariable id: ProjectId,
         @Valid @RequestBody requestBody: ProjectDomainRequest
     ): ResponseEntity<ProjectResponse> =
@@ -86,7 +89,7 @@ class ProjectController(private val projectService: ProjectService) { // TODO te
 
     @PostMapping("/v1/projects/{id}/set-access")
     fun setAccess(
-        @UserBinding user: User,
+        @UserBinding @SeatLimited user: User, // TODO with full seat limit reached, user will not be able to change access
         @PathVariable id: ProjectId,
         @Valid @RequestBody requestBody: ProjectAccessRequest
     ) {

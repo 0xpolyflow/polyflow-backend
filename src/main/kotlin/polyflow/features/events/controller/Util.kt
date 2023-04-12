@@ -2,6 +2,7 @@ package polyflow.features.events.controller
 
 import org.springframework.security.core.context.SecurityContextHolder
 import polyflow.exception.BadAuthenticationException
+import polyflow.exception.NoActiveSubscriptionException
 import polyflow.exception.NonExistentApiKeyException
 import polyflow.exception.NonExistentUserException
 import polyflow.features.project.model.result.Project
@@ -19,6 +20,18 @@ object Util {
         return userRepository.getById(userId) ?: throw NonExistentUserException()
     }
 
-    fun resolveProject(projectRepository: ProjectRepository, apiKey: Optional<String>): Project =
-        apiKey.map { projectRepository.getByApiKey(it) }.orElseThrow(::NonExistentApiKeyException)!!
+    fun resolveProject(
+        projectRepository: ProjectRepository,
+        userRepository: UserRepository,
+        apiKey: Optional<String>
+    ): Project =
+        apiKey.map {
+            projectRepository.getByApiKey(it)?.apply {
+                if (userRepository.getById(ownerId)!!.hasNoActiveSubscription()) {
+                    throw NoActiveSubscriptionException()
+                }
+            }
+        }.orElseThrow(::NonExistentApiKeyException)!!
+
+    private fun User.hasNoActiveSubscription() = this.totalDomainLimit == 0 && this.totalSeatLimit == 0
 }

@@ -60,7 +60,7 @@ class EventGraphQlController(
         @Valid @Argument event: WalletConnectedEventRequest,
         @ContextValue apiKey: Optional<String>
     ): WalletConnectedEvent {
-        val project = Util.resolveProject(projectRepository, apiKey)
+        val project = Util.resolveProject(projectRepository, userRepository, apiKey)
         return eventService.create(project.id, event)
     }
 
@@ -69,7 +69,7 @@ class EventGraphQlController(
         @Valid @Argument event: TxRequestEventRequest,
         @ContextValue apiKey: Optional<String>
     ): TxRequestEvent {
-        val project = Util.resolveProject(projectRepository, apiKey)
+        val project = Util.resolveProject(projectRepository, userRepository, apiKey)
         return eventService.create(project.id, event)
     }
 
@@ -78,7 +78,7 @@ class EventGraphQlController(
         @Valid @Argument event: ErrorEventRequest,
         @ContextValue apiKey: Optional<String>
     ): ErrorEvent {
-        val project = Util.resolveProject(projectRepository, apiKey)
+        val project = Util.resolveProject(projectRepository, userRepository, apiKey)
         return eventService.create(project.id, event)
     }
 
@@ -87,7 +87,7 @@ class EventGraphQlController(
         @Valid @Argument event: BlockchainErrorEventRequest,
         @ContextValue apiKey: Optional<String>
     ): BlockchainErrorEvent {
-        val project = Util.resolveProject(projectRepository, apiKey)
+        val project = Util.resolveProject(projectRepository, userRepository, apiKey)
         return eventService.create(project.id, event)
     }
 
@@ -96,7 +96,7 @@ class EventGraphQlController(
         @Valid @Argument event: UserLandedEventRequest,
         @ContextValue apiKey: Optional<String>
     ): UserLandedEvent {
-        val project = Util.resolveProject(projectRepository, apiKey)
+        val project = Util.resolveProject(projectRepository, userRepository, apiKey)
         return eventService.create(project.id, event)
     }
 
@@ -106,7 +106,7 @@ class EventGraphQlController(
         @Argument newStatus: TxStatus,
         @ContextValue apiKey: Optional<String>
     ): TxRequestEvent {
-        val project = Util.resolveProject(projectRepository, apiKey)
+        val project = Util.resolveProject(projectRepository, userRepository, apiKey)
         return eventService.updateTxRequestEventTxStatus(project.id, EventId(id), newStatus)
     }
 
@@ -116,7 +116,7 @@ class EventGraphQlController(
         @Argument newStatus: TxStatus,
         @ContextValue apiKey: Optional<String>
     ): BlockchainErrorEvent {
-        val project = Util.resolveProject(projectRepository, apiKey)
+        val project = Util.resolveProject(projectRepository, userRepository, apiKey)
         return eventService.updateBlockchainErrorEventTxStatus(project.id, EventId(id), newStatus)
     }
 }

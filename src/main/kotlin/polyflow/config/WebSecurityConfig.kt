@@ -92,6 +92,8 @@ class WebSecurityConfig(private val objectMapper: ObjectMapper) {
             .antMatchers("/v1/**").permitAll()
             .antMatchers("/v1/change-password").authenticated()
             .antMatchers("/v1/projects/**").authenticated()
+            .antMatchers("/v1/stripe/**").authenticated()
+            .antMatchers("/v1/stripe/webhook").permitAll()
             .anyRequest().authenticated()
             .and()
             .exceptionHandling().authenticationEntryPoint(authenticationHandler).and()
