@@ -27,4 +27,6 @@ interface EventTable<R : Record, T : TableImpl<R>> {
     val walletProvider: Field<String>
     val country: Field<String?>
     val browser: Field<String?>
+
+    val sessionId: Field<String>
 }

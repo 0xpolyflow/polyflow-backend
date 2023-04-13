@@ -107,6 +107,9 @@ value class UtcDateTime private constructor(val value: OffsetDateTime) {
         val monthDigit = month.value.toString().padStart(2, '0')
         return UtcDateTime(OffsetDateTime.parse("$year-$monthDigit-${lastDay}T23:59:59.999Z"))
     }
+
+    fun min(other: UtcDateTime): UtcDateTime =
+        if (this.value.isBefore(other.value)) this else other
 }
 
 sealed interface Duration

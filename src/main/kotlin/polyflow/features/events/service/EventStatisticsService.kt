@@ -6,6 +6,7 @@ import polyflow.features.events.model.response.AverageTimespanValues
 import polyflow.features.events.model.response.IntTimespanValues
 import polyflow.features.events.model.response.IntTimespanWithAverage
 import polyflow.features.events.model.response.MovingAverageTimespanValues
+import polyflow.features.events.model.response.SessionEventsInfo
 import polyflow.features.events.model.response.WalletConnectionsAndTransactionsInfo
 import polyflow.generated.jooq.id.ProjectId
 import polyflow.generated.jooq.id.UserId
@@ -79,4 +80,10 @@ interface EventStatisticsService {
         userId: UserId,
         eventFilter: EventFilter?
     ): Array<WalletConnectionsAndTransactionsInfo>
+
+    fun listSessions(
+        projectId: ProjectId,
+        userId: UserId,
+        eventFilter: EventFilter?
+    ): Array<SessionEventsInfo>
 }

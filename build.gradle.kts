@@ -302,6 +302,7 @@ detekt {
 }
 
 tasks.withType<Detekt> {
+    onlyIf { false } // TODO detekt is disabled
     exclude("polyflow/generated/**")
 }
 

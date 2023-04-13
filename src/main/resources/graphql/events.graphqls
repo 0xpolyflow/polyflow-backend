@@ -297,6 +297,17 @@ type WalletConnectionsAndTransactionsInfo {
     executedTransactions: Int!
 }
 
+type SessionEventsInfo {
+    sessionId: String!
+    totalEventCount: Int!
+    totalErrorEventCount: Int!
+    walletAddresses: [String!]!
+    hasConnectedWallet: Boolean!
+    hasExecutedTransaction: Boolean!
+    devices: [DeviceState!]!
+    firstEventDateTime: DateTime!
+}
+
 input EventFilter {
     tracker: EventTrackerModelFilter
     wallet: WalletStateFilter
@@ -365,6 +376,8 @@ type Query {
     listCountries(projectId: UUID!, filter: EventFilter): [WalletConnectionsAndTransactionsInfo!]!
 
     listBrowsers(projectId: UUID!, filter: EventFilter): [WalletConnectionsAndTransactionsInfo!]!
+
+    listSessions(projectId: UUID!, filter: EventFilter): [SessionEventsInfo!]!
 }
 
 type Mutation {

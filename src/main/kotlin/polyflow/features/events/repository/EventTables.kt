@@ -16,6 +16,7 @@ import polyflow.generated.jooq.tables.records.TxRequestEventRecord
 import polyflow.generated.jooq.tables.records.UserLandedEventRecord
 import polyflow.generated.jooq.tables.records.WalletConnectedEventRecord
 import polyflow.generated.jooq.udt.DeviceState
+import polyflow.generated.jooq.udt.EventTrackerModel
 import polyflow.generated.jooq.udt.WalletState
 
 fun <R : Record, U : UDTRecord<U>, V> TableField<R, out U?>.setSubfield(field: UDTField<U, V>) =
@@ -45,6 +46,8 @@ object EventTables {
         override val walletProvider = db.DEVICE.subfield(DeviceState.DEVICE_STATE.WALLET_PROVIDER)
         override val country = db.DEVICE.subfield(DeviceState.DEVICE_STATE.COUNTRY)
         override val browser = db.DEVICE.subfield(DeviceState.DEVICE_STATE.BROWSER)
+
+        override val sessionId = db.TRACKER.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.SESSION_ID)
     }
 
     object TxRequestTable : EventTable<TxRequestEventRecord, TxRequestEventTable> {
@@ -62,6 +65,8 @@ object EventTables {
         override val walletProvider = db.DEVICE.subfield(DeviceState.DEVICE_STATE.WALLET_PROVIDER)
         override val country = db.DEVICE.subfield(DeviceState.DEVICE_STATE.COUNTRY)
         override val browser = db.DEVICE.subfield(DeviceState.DEVICE_STATE.BROWSER)
+
+        override val sessionId = db.TRACKER.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.SESSION_ID)
     }
 
     object BlockchainErrorTable : EventTable<BlockchainErrorEventRecord, BlockchainErrorEventTable> {
@@ -79,6 +84,8 @@ object EventTables {
         override val walletProvider = db.DEVICE.subfield(DeviceState.DEVICE_STATE.WALLET_PROVIDER)
         override val country = db.DEVICE.subfield(DeviceState.DEVICE_STATE.COUNTRY)
         override val browser = db.DEVICE.subfield(DeviceState.DEVICE_STATE.BROWSER)
+
+        override val sessionId = db.TRACKER.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.SESSION_ID)
     }
 
     object ErrorTable : EventTable<ErrorEventRecord, ErrorEventTable> {
@@ -96,6 +103,8 @@ object EventTables {
         override val walletProvider = db.DEVICE.subfield(DeviceState.DEVICE_STATE.WALLET_PROVIDER)
         override val country = db.DEVICE.subfield(DeviceState.DEVICE_STATE.COUNTRY)
         override val browser = db.DEVICE.subfield(DeviceState.DEVICE_STATE.BROWSER)
+
+        override val sessionId = db.TRACKER.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.SESSION_ID)
     }
 
     object UserLandedTable : EventTable<UserLandedEventRecord, UserLandedEventTable> {
@@ -113,5 +122,7 @@ object EventTables {
         override val walletProvider = db.DEVICE.subfield(DeviceState.DEVICE_STATE.WALLET_PROVIDER)
         override val country = db.DEVICE.subfield(DeviceState.DEVICE_STATE.COUNTRY)
         override val browser = db.DEVICE.subfield(DeviceState.DEVICE_STATE.BROWSER)
+
+        override val sessionId = db.TRACKER.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.SESSION_ID)
     }
 }
