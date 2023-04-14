@@ -13,11 +13,14 @@ import polyflow.features.events.model.DeviceState
 import polyflow.features.events.model.ScreenState
 import polyflow.features.events.model.params.EventFilter
 import polyflow.features.events.model.params.StatisticsQuery
+import polyflow.features.events.model.request.filter.EventTrackerModelField
 import polyflow.features.events.model.response.AverageTimespanValues
 import polyflow.features.events.model.response.IntTimespanValues
 import polyflow.features.events.model.response.IntTimespanWithAverage
 import polyflow.features.events.model.response.MovingAverageTimespanValues
+import polyflow.features.events.model.response.ProjectUserStats
 import polyflow.features.events.model.response.SessionEventsInfo
+import polyflow.features.events.model.response.UsersWalletsAndTransactionsInfo
 import polyflow.features.events.model.response.WalletConnectionsAndTransactionsInfo
 import polyflow.generated.jooq.enums.TxStatus
 import polyflow.generated.jooq.id.ProjectId
@@ -154,7 +157,7 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
 
         val table = EventTables.TxRequestTable
         val txHashField = table.db.TX.subfield(TxData.TX_DATA.HASH)
-        val userIdField = table.eventTracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.USER_ID)
+        val userIdField = table.tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.USER_ID)
 
         return dslContext.select(txHashField, userIdField, table.createdAt)
             .from(table.db)
@@ -218,7 +221,7 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
         projectId: ProjectId,
         eventFilter: EventFilter?
     ): Array<WalletConnectionsAndTransactionsInfo> {
-        logger.debug { "List wallet providers, projectId: $projectId, utmFilter: $eventFilter" }
+        logger.debug { "List wallet providers, projectId: $projectId, eventFilter: $eventFilter" }
         return listStats(projectId, { it.walletProvider }, eventFilter)
     }
 
@@ -227,7 +230,7 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
         projectId: ProjectId,
         eventFilter: EventFilter?
     ): Array<WalletConnectionsAndTransactionsInfo> {
-        logger.debug { "List countries, projectId: $projectId, utmFilter: $eventFilter" }
+        logger.debug { "List countries, projectId: $projectId, eventFilter: $eventFilter" }
         return listStats(projectId, { it.country }, eventFilter)
     }
 
@@ -236,14 +239,14 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
         projectId: ProjectId,
         eventFilter: EventFilter?
     ): Array<WalletConnectionsAndTransactionsInfo> {
-        logger.debug { "List browsers, projectId: $projectId, utmFilter: $eventFilter" }
+        logger.debug { "List browsers, projectId: $projectId, eventFilter: $eventFilter" }
         return listStats(projectId, { it.browser }, eventFilter)
     }
 
     // TODO improve efficiency
     @Suppress("LongMethod", "ComplexMethod")
     override fun listSessions(projectId: ProjectId, eventFilter: EventFilter?): Array<SessionEventsInfo> {
-        logger.debug { "List sessions, projectId: $projectId, utmFilter: $eventFilter" }
+        logger.debug { "List sessions, projectId: $projectId, eventFilter: $eventFilter" }
 
         data class SessionEventInfoCollector(
             val sessionId: String,
@@ -375,6 +378,218 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
         }
 
         return allCounts.toTypedArray()
+    }
+
+    // TODO improve efficiency
+    override fun projectUserStats(projectId: ProjectId, eventFilter: EventFilter?): ProjectUserStats {
+        logger.debug { "Get project user stats, projectId: $projectId, eventFilter: $eventFilter" }
+
+        data class WalletCount(val n: Int)
+        data class TxCount(val n: Int)
+        data class WalletInfo(val hasWallet: Boolean, val hasConnected: Boolean)
+
+        fun fetchUserCount(table: EventTable<*, *>) =
+            dslContext.select(
+                table.userId,
+                DSL.countDistinct(table.walletAddress).filterWhere(table.walletAddress.isNotNull)
+            )
+                .from(table.db)
+                .where(
+                    DSL.and(
+                        listOfNotNull(
+                            table.projectId.eq(projectId),
+                            eventFilter?.createCondition(table)
+                        )
+                    )
+                )
+                .groupBy(table.userId)
+                .fetchMap({ it.component1() }) {
+                    WalletCount(it.component2() ?: 0)
+                }
+
+        val walletConnectedCount = fetchUserCount(EventTables.WalletConnectedTable)
+        val blockchainErrorCount = fetchUserCount(EventTables.BlockchainErrorTable)
+        val errorCount = fetchUserCount(EventTables.ErrorTable)
+        val userLandedCount = fetchUserCount(EventTables.UserLandedTable)
+        val txRequestCount = dslContext.select(
+            EventTables.TxRequestTable.userId,
+            DSL.countDistinct(EventTables.TxRequestTable.txHash)
+                .filterWhere(
+                    DSL.and(
+                        EventTables.TxRequestTable.txHash.isNotNull,
+                        EventTables.TxRequestTable.txStatus.ne(TxStatus.PENDING)
+                    )
+                )
+        )
+            .from(EventTables.TxRequestTable.db)
+            .where(
+                DSL.and(
+                    listOfNotNull(
+                        EventTables.TxRequestTable.projectId.eq(projectId),
+                        eventFilter?.createCondition(EventTables.TxRequestTable)
+                    )
+                )
+            )
+            .groupBy(EventTables.TxRequestTable.userId)
+            .fetchMap({ it.component1() }) {
+                TxCount(it.component2() ?: 0)
+            }
+
+        val keys = walletConnectedCount.keys + blockchainErrorCount.keys + errorCount.keys +
+            userLandedCount.keys + txRequestCount.keys
+        val walletInfos = keys.map { key ->
+            val wcc = walletConnectedCount[key]?.n ?: 0
+            val ulc = userLandedCount[key]?.n ?: 0
+
+            WalletInfo(
+                hasWallet = wcc + ulc > 0,
+                hasConnected = wcc > 0
+            )
+        }
+
+        return ProjectUserStats(
+            totalUsers = keys.size,
+            usersWithWallet = walletInfos.count { it.hasWallet },
+            usersWithConnectedWallet = walletInfos.count { it.hasConnected },
+            usersWithExecutedTx = txRequestCount.count { it.value.n > 0 },
+            usersWithMultipleExecutedTx = txRequestCount.count { it.value.n > 1 }
+        )
+    }
+
+    // TODO improve efficiency
+    override fun getUserWalletAndTransactionStats(
+        field: EventTrackerModelField,
+        projectId: ProjectId,
+        from: UtcDateTime?,
+        to: UtcDateTime?,
+        eventFilter: EventFilter?
+    ): Array<UsersWalletsAndTransactionsInfo> {
+        logger.debug {
+            "Get project user, wallet and transaction stats, field: $field, projectId: $projectId," +
+                " from: $from, to: $to, eventFilter: $eventFilter"
+        }
+
+        data class WalletCount(
+            val totalWallets: Int,
+            val users: Set<String>,
+            val usersWithWallets: Set<String>,
+            val uniqueWallets: Int
+        )
+
+        data class TxCount(
+            val totalTx: Int,
+            val users: Set<String>,
+            val usersWithExecutedTx: Int
+        )
+
+        val EMPTY_WALLET_COUNT = WalletCount(0, emptySet(), emptySet(), 0)
+        val EMPTY_TX_COUNT = TxCount(0, emptySet(), 0)
+
+        fun fetchUserAndWalletCount(table: EventTable<*, *>): Map<String, WalletCount> {
+            val aggregate = field.get(table)
+
+            return dslContext.select(
+                aggregate,
+                DSL.count(table.walletAddress).filterWhere(table.walletAddress.isNotNull),
+                PostgresDSL.arrayAggDistinct(table.userId).filterWhere(table.userId.isNotNull),
+                PostgresDSL.arrayAggDistinct(table.userId).filterWhere(
+                    DSL.and(
+                        table.userId.isNotNull,
+                        table.walletAddress.isNotNull
+                    )
+                ),
+                DSL.countDistinct(table.walletAddress).filterWhere(table.walletAddress.isNotNull)
+            )
+                .from(table.db)
+                .where(
+                    DSL.and(
+                        listOfNotNull(
+                            aggregate.isNotNull,
+                            table.projectId.eq(projectId),
+                            from?.let { table.createdAt.ge(it) },
+                            to?.let { table.createdAt.le(it) },
+                            eventFilter?.createCondition(table),
+                        )
+                    )
+                )
+                .groupBy(aggregate)
+                .fetchMap({ it.component1() }) {
+                    WalletCount(
+                        totalWallets = it.component2() ?: 0,
+                        users = it.component3()?.toSet() ?: emptySet(),
+                        usersWithWallets = it.component4()?.toSet() ?: emptySet(),
+                        uniqueWallets = it.component5() ?: 0
+                    )
+                }
+        }
+
+        val walletConnectedCount = fetchUserAndWalletCount(EventTables.WalletConnectedTable)
+        val blockchainErrorCount = fetchUserAndWalletCount(EventTables.BlockchainErrorTable)
+        val errorCount = fetchUserAndWalletCount(EventTables.ErrorTable)
+        val userLandedCount = fetchUserAndWalletCount(EventTables.UserLandedTable)
+        val txReqAggregate = field.get(EventTables.TxRequestTable)
+        val txRequestCount = dslContext.select(
+            txReqAggregate,
+            DSL.countDistinct(EventTables.TxRequestTable.txHash)
+                .filterWhere(
+                    DSL.and(
+                        EventTables.TxRequestTable.txHash.isNotNull,
+                        EventTables.TxRequestTable.txStatus.ne(TxStatus.PENDING)
+                    )
+                ),
+            PostgresDSL.arrayAggDistinct(EventTables.TxRequestTable.userId).filterWhere(
+                EventTables.TxRequestTable.userId.isNotNull
+            ),
+            DSL.countDistinct(EventTables.TxRequestTable.userId).filterWhere(
+                DSL.and(
+                    EventTables.TxRequestTable.txHash.isNotNull,
+                    EventTables.TxRequestTable.txStatus.ne(TxStatus.PENDING)
+                )
+            )
+        )
+            .from(EventTables.TxRequestTable.db)
+            .where(
+                DSL.and(
+                    listOfNotNull(
+                        txReqAggregate.isNotNull,
+                        EventTables.TxRequestTable.projectId.eq(projectId),
+                        EventTables.TxRequestTable.projectId.eq(projectId),
+                        eventFilter?.createCondition(EventTables.TxRequestTable)
+                    )
+                )
+            )
+            .groupBy(txReqAggregate)
+            .fetchMap({ it.component1() }) {
+                TxCount(
+                    totalTx = it.component2() ?: 0,
+                    users = it.component3()?.toSet() ?: emptySet(),
+                    usersWithExecutedTx = it.component4() ?: 0
+                )
+            }
+
+        val keys = walletConnectedCount.keys + blockchainErrorCount.keys + errorCount.keys +
+            userLandedCount.keys + txRequestCount.keys
+
+        val result = keys.map { key ->
+            val wcc = walletConnectedCount[key] ?: EMPTY_WALLET_COUNT
+            val bec = blockchainErrorCount[key] ?: EMPTY_WALLET_COUNT
+            val ec = errorCount[key] ?: EMPTY_WALLET_COUNT
+            val ulc = userLandedCount[key] ?: EMPTY_WALLET_COUNT
+            val txc = txRequestCount[key] ?: EMPTY_TX_COUNT
+
+            UsersWalletsAndTransactionsInfo(
+                name = key,
+                totalUsers = (wcc.users + bec.users + ec.users + ulc.users + txc.users).size,
+                usersWithWallet = (wcc.usersWithWallets + ulc.usersWithWallets).size,
+                usersWithConnectedWallet = wcc.usersWithWallets.size,
+                totalWalletConnections = wcc.totalWallets,
+                uniqueWalletConnections = wcc.uniqueWallets,
+                executedTransactions = txc.totalTx,
+                usersWithExecutedTx = txc.usersWithExecutedTx
+            )
+        }
+
+        return result.toTypedArray()
     }
 
     private fun listStats(

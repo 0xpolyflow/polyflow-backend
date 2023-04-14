@@ -5,16 +5,20 @@ import org.springframework.stereotype.Service
 import polyflow.exception.AccessForbiddenException
 import polyflow.features.events.model.params.EventFilter
 import polyflow.features.events.model.params.StatisticsQuery
+import polyflow.features.events.model.request.filter.EventTrackerModelField
 import polyflow.features.events.model.response.AverageTimespanValues
 import polyflow.features.events.model.response.IntTimespanValues
 import polyflow.features.events.model.response.IntTimespanWithAverage
 import polyflow.features.events.model.response.MovingAverageTimespanValues
+import polyflow.features.events.model.response.ProjectUserStats
 import polyflow.features.events.model.response.SessionEventsInfo
+import polyflow.features.events.model.response.UsersWalletsAndTransactionsInfo
 import polyflow.features.events.model.response.WalletConnectionsAndTransactionsInfo
 import polyflow.features.events.repository.EventStatisticsRepository
 import polyflow.features.project.repository.ProjectRepository
 import polyflow.generated.jooq.id.ProjectId
 import polyflow.generated.jooq.id.UserId
+import polyflow.util.UtcDateTime
 
 @Service
 @Suppress("TooManyFunctions")
@@ -157,6 +161,42 @@ class EventStatisticsServiceImpl(
         requireProjectReadAccess(userId, projectId)
 
         return eventStatisticsRepository.listSessions(projectId, eventFilter)
+    }
+
+    override fun projectUserStats(
+        projectId: ProjectId,
+        userId: UserId,
+        eventFilter: EventFilter?
+    ): ProjectUserStats {
+        logger.debug { "Get project user stats, projectId: $projectId, userId: $userId, eventFilter: $eventFilter" }
+
+        requireProjectReadAccess(userId, projectId)
+
+        return eventStatisticsRepository.projectUserStats(projectId, eventFilter)
+    }
+
+    override fun getUserWalletAndTransactionStats(
+        field: EventTrackerModelField,
+        projectId: ProjectId,
+        userId: UserId,
+        from: UtcDateTime?,
+        to: UtcDateTime?,
+        eventFilter: EventFilter?
+    ): Array<UsersWalletsAndTransactionsInfo> {
+        logger.debug {
+            "Get project user, wallet and transaction stats, field: $field, projectId: $projectId, userId: $userId," +
+                " from: $from, to: $to, eventFilter: $eventFilter"
+        }
+
+        requireProjectReadAccess(userId, projectId)
+
+        return eventStatisticsRepository.getUserWalletAndTransactionStats(
+            field = field,
+            projectId = projectId,
+            from = from,
+            to = to,
+            eventFilter = eventFilter
+        )
     }
 
     private fun requireProjectReadAccess(userId: UserId, projectId: ProjectId) {

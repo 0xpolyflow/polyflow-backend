@@ -2,14 +2,18 @@ package polyflow.features.events.service
 
 import polyflow.features.events.model.params.EventFilter
 import polyflow.features.events.model.params.StatisticsQuery
+import polyflow.features.events.model.request.filter.EventTrackerModelField
 import polyflow.features.events.model.response.AverageTimespanValues
 import polyflow.features.events.model.response.IntTimespanValues
 import polyflow.features.events.model.response.IntTimespanWithAverage
 import polyflow.features.events.model.response.MovingAverageTimespanValues
+import polyflow.features.events.model.response.ProjectUserStats
 import polyflow.features.events.model.response.SessionEventsInfo
+import polyflow.features.events.model.response.UsersWalletsAndTransactionsInfo
 import polyflow.features.events.model.response.WalletConnectionsAndTransactionsInfo
 import polyflow.generated.jooq.id.ProjectId
 import polyflow.generated.jooq.id.UserId
+import polyflow.util.UtcDateTime
 
 @Suppress("TooManyFunctions")
 interface EventStatisticsService {
@@ -86,4 +90,19 @@ interface EventStatisticsService {
         userId: UserId,
         eventFilter: EventFilter?
     ): Array<SessionEventsInfo>
+
+    fun projectUserStats(
+        projectId: ProjectId,
+        userId: UserId,
+        eventFilter: EventFilter?
+    ): ProjectUserStats
+
+    fun getUserWalletAndTransactionStats(
+        field: EventTrackerModelField,
+        projectId: ProjectId,
+        userId: UserId,
+        from: UtcDateTime?,
+        to: UtcDateTime?,
+        eventFilter: EventFilter?
+    ): Array<UsersWalletsAndTransactionsInfo>
 }

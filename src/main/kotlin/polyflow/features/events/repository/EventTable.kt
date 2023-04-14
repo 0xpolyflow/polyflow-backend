@@ -18,7 +18,7 @@ interface EventTable<R : Record, T : TableImpl<R>> {
     val projectId: TableField<R, ProjectId>
     val createdAt: TableField<R, UtcDateTime>
 
-    val eventTracker: TableField<R, EventTrackerModelRecord>
+    val tracker: TableField<R, EventTrackerModelRecord>
     val wallet: TableField<R, out WalletStateRecord?>
     val device: TableField<R, DeviceStateRecord>
     val network: TableField<R, out NetworkStateRecord?>
@@ -28,5 +28,14 @@ interface EventTable<R : Record, T : TableImpl<R>> {
     val country: Field<String?>
     val browser: Field<String?>
 
+    val eventTracker: Field<String>
     val sessionId: Field<String>
+    val userId: Field<String>
+    val utmSource: Field<String?>
+    val utmMedium: Field<String?>
+    val utmCampaign: Field<String?>
+    val utmContent: Field<String?>
+    val utmTerm: Field<String?>
+    val origin: Field<String?>
+    val path: Field<String?>
 }

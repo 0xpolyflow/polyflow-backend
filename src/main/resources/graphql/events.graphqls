@@ -85,6 +85,18 @@ input EventTrackerModelFilter {
     path: String
 }
 
+enum EventTrackerModelField {
+    EVENT_TRACKER,
+    SESSION_ID,
+    UTM_SOURCE,
+    UTM_MEDIUM,
+    UTM_CAMPAIGN,
+    UTM_CONTENT,
+    UTM_TERM,
+    ORIGIN,
+    PATH
+}
+
 ## NetworkState
 type NetworkState {
     chainId: Long!
@@ -308,6 +320,25 @@ type SessionEventsInfo {
     firstEventDateTime: DateTime!
 }
 
+type ProjectUserStats {
+    totalUsers: Int!
+    usersWithWallet: Int!
+    usersWithConnectedWallet: Int!
+    usersWithExecutedTx: Int!
+    usersWithMultipleExecutedTx: Int!
+}
+
+type UsersWalletsAndTransactionsInfo {
+    name: String!
+    totalUsers: Int!
+    usersWithWallet: Int!
+    usersWithConnectedWallet: Int!
+    totalWalletConnections: Int!
+    uniqueWalletConnections: Int!
+    executedTransactions: Int!
+    usersWithExecutedTx: Int!
+}
+
 input EventFilter {
     tracker: EventTrackerModelFilter
     wallet: WalletStateFilter
@@ -378,6 +409,10 @@ type Query {
     listBrowsers(projectId: UUID!, filter: EventFilter): [WalletConnectionsAndTransactionsInfo!]!
 
     listSessions(projectId: UUID!, filter: EventFilter): [SessionEventsInfo!]!
+
+    projectUserStats(projectId: UUID!, filter: EventFilter): ProjectUserStats!
+
+    getUserWalletAndTransactionStats(field: EventTrackerModelField!, projectId: UUID!, from: DateTime, to: DateTime, filter: EventFilter): [UsersWalletsAndTransactionsInfo!]!
 }
 
 type Mutation {

@@ -6,11 +6,14 @@ import org.springframework.stereotype.Controller
 import org.springframework.validation.annotation.Validated
 import polyflow.features.events.model.params.EventFilter
 import polyflow.features.events.model.params.StatisticsQuery
+import polyflow.features.events.model.request.filter.EventTrackerModelField
 import polyflow.features.events.model.response.AverageTimespanValues
 import polyflow.features.events.model.response.IntTimespanValues
 import polyflow.features.events.model.response.IntTimespanWithAverage
 import polyflow.features.events.model.response.MovingAverageTimespanValues
+import polyflow.features.events.model.response.ProjectUserStats
 import polyflow.features.events.model.response.SessionEventsInfo
+import polyflow.features.events.model.response.UsersWalletsAndTransactionsInfo
 import polyflow.features.events.model.response.WalletConnectionsAndTransactionsInfo
 import polyflow.features.events.service.EventStatisticsService
 import polyflow.features.user.repository.UserRepository
@@ -290,6 +293,38 @@ class EventStatisticsGraphQlController(
         return eventStatisticsService.listSessions(
             projectId = ProjectId(projectId),
             userId = user.id,
+            eventFilter = filter
+        )
+    }
+
+    @QueryMapping
+    fun projectUserStats(
+        @Argument projectId: UUID,
+        @Argument filter: EventFilter?
+    ): ProjectUserStats {
+        val user = Util.resolveUser(userRepository)
+        return eventStatisticsService.projectUserStats(
+            projectId = ProjectId(projectId),
+            userId = user.id,
+            eventFilter = filter
+        )
+    }
+
+    @QueryMapping
+    fun getUserWalletAndTransactionStats(
+        @Argument field: EventTrackerModelField,
+        @Argument projectId: UUID,
+        @Argument from: OffsetDateTime?,
+        @Argument to: OffsetDateTime?,
+        @Argument filter: EventFilter?
+    ): Array<UsersWalletsAndTransactionsInfo> {
+        val user = Util.resolveUser(userRepository)
+        return eventStatisticsService.getUserWalletAndTransactionStats(
+            field = field,
+            projectId = ProjectId(projectId),
+            userId = user.id,
+            from = from?.let(UtcDateTime::invoke),
+            to = to?.let(UtcDateTime::invoke),
             eventFilter = filter
         )
     }

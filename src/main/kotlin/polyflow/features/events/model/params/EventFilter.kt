@@ -30,16 +30,16 @@ data class EventFilter(
         val ns = NS.NETWORK_STATE
 
         val conditions = listOfNotNull(
-            tracker?.eventTracker?.let { eventTable.eventTracker.subfield(etm.EVENT_TRACKER).eq(it) },
-            tracker?.userId?.let { eventTable.eventTracker.subfield(etm.USER_ID).eq(it) },
-            tracker?.sessionId?.let { eventTable.eventTracker.subfield(etm.SESSION_ID).eq(it) },
-            tracker?.utmSource?.let { eventTable.eventTracker.subfield(etm.UTM_SOURCE).eq(it) },
-            tracker?.utmMedium?.let { eventTable.eventTracker.subfield(etm.UTM_MEDIUM).eq(it) },
-            tracker?.utmCampaign?.let { eventTable.eventTracker.subfield(etm.UTM_CAMPAIGN).eq(it) },
-            tracker?.utmContent?.let { eventTable.eventTracker.subfield(etm.UTM_CONTENT).eq(it) },
-            tracker?.utmTerm?.let { eventTable.eventTracker.subfield(etm.UTM_TERM).eq(it) },
-            tracker?.origin?.let { eventTable.eventTracker.subfield(etm.ORIGIN).eq(it) },
-            tracker?.path?.let { eventTable.eventTracker.subfield(etm.PATH).eq(it) },
+            tracker?.eventTracker?.let { eventTable.tracker.subfield(etm.EVENT_TRACKER).eq(it) },
+            tracker?.userId?.let { eventTable.tracker.subfield(etm.USER_ID).eq(it) },
+            tracker?.sessionId?.let { eventTable.tracker.subfield(etm.SESSION_ID).eq(it) },
+            tracker?.utmSource?.let { eventTable.tracker.subfield(etm.UTM_SOURCE).eq(it) },
+            tracker?.utmMedium?.let { eventTable.tracker.subfield(etm.UTM_MEDIUM).eq(it) },
+            tracker?.utmCampaign?.let { eventTable.tracker.subfield(etm.UTM_CAMPAIGN).eq(it) },
+            tracker?.utmContent?.let { eventTable.tracker.subfield(etm.UTM_CONTENT).eq(it) },
+            tracker?.utmTerm?.let { eventTable.tracker.subfield(etm.UTM_TERM).eq(it) },
+            tracker?.origin?.let { eventTable.tracker.subfield(etm.ORIGIN).eq(it) },
+            tracker?.path?.let { eventTable.tracker.subfield(etm.PATH).eq(it) },
 
             wallet?.walletAddress?.let { eventTable.wallet.subfield(ws.WALLET_ADDRESS).eq(WalletAddress(it)) },
             wallet?.gasBalance?.let { eventTable.wallet.subfield(ws.GAS_BALANCE).eq(it) },

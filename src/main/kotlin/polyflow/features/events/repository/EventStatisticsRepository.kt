@@ -2,13 +2,17 @@ package polyflow.features.events.repository
 
 import polyflow.features.events.model.params.EventFilter
 import polyflow.features.events.model.params.StatisticsQuery
+import polyflow.features.events.model.request.filter.EventTrackerModelField
 import polyflow.features.events.model.response.AverageTimespanValues
 import polyflow.features.events.model.response.IntTimespanValues
 import polyflow.features.events.model.response.IntTimespanWithAverage
 import polyflow.features.events.model.response.MovingAverageTimespanValues
+import polyflow.features.events.model.response.ProjectUserStats
 import polyflow.features.events.model.response.SessionEventsInfo
+import polyflow.features.events.model.response.UsersWalletsAndTransactionsInfo
 import polyflow.features.events.model.response.WalletConnectionsAndTransactionsInfo
 import polyflow.generated.jooq.id.ProjectId
+import polyflow.util.UtcDateTime
 
 @Suppress("TooManyFunctions")
 interface EventStatisticsRepository {
@@ -30,4 +34,12 @@ interface EventStatisticsRepository {
     fun listCountries(projectId: ProjectId, eventFilter: EventFilter?): Array<WalletConnectionsAndTransactionsInfo>
     fun listBrowsers(projectId: ProjectId, eventFilter: EventFilter?): Array<WalletConnectionsAndTransactionsInfo>
     fun listSessions(projectId: ProjectId, eventFilter: EventFilter?): Array<SessionEventsInfo>
+    fun projectUserStats(projectId: ProjectId, eventFilter: EventFilter?): ProjectUserStats
+    fun getUserWalletAndTransactionStats(
+        field: EventTrackerModelField,
+        projectId: ProjectId,
+        from: UtcDateTime?,
+        to: UtcDateTime?,
+        eventFilter: EventFilter?
+    ): Array<UsersWalletsAndTransactionsInfo>
 }
