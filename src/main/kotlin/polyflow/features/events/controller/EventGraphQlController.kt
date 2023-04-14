@@ -39,6 +39,12 @@ class EventGraphQlController(
 ) { // TODO test
 
     @QueryMapping
+    fun findEventById(@Argument id: UUID): EventResponse {
+        val user = Util.resolveUser(userRepository)
+        return eventService.findEventById(eventId = EventId(id), userId = user.id)
+    }
+
+    @QueryMapping
     fun findEvents(
         @Argument from: OffsetDateTime?,
         @Argument to: OffsetDateTime?,

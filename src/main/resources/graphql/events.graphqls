@@ -347,6 +347,8 @@ input EventFilter {
 }
 
 type Query {
+    findEventById(id: UUID!): Event!
+
     findEvents(from: DateTime, to: DateTime, projectId: UUID!, filter: EventFilter): [Event!]!
 
     #    - All queries should be fetchable with a time range: e.g.

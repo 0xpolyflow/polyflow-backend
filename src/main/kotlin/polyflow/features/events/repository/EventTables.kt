@@ -35,6 +35,7 @@ object EventTables {
     object WalletConnectedTable : EventTable<WalletConnectedEventRecord, WalletConnectedEventTable> {
         override val db = WalletConnectedEventTable
 
+        override val id = db.ID
         override val projectId = db.PROJECT_ID
         override val createdAt = db.CREATED_AT
 
@@ -66,6 +67,7 @@ object EventTables {
         val txHash = db.TX.subfield(TxData.TX_DATA.HASH)
         val txStatus = db.TX.subfield(TxData.TX_DATA.STATUS)
 
+        override val id = db.ID
         override val projectId = db.PROJECT_ID
         override val createdAt = db.CREATED_AT
 
@@ -94,6 +96,7 @@ object EventTables {
     object BlockchainErrorTable : EventTable<BlockchainErrorEventRecord, BlockchainErrorEventTable> {
         override val db = BlockchainErrorEventTable
 
+        override val id = db.ID
         override val projectId = db.PROJECT_ID
         override val createdAt = db.CREATED_AT
 
@@ -122,6 +125,7 @@ object EventTables {
     object ErrorTable : EventTable<ErrorEventRecord, ErrorEventTable> {
         override val db = ErrorEventTable
 
+        override val id = db.ID
         override val projectId = db.PROJECT_ID
         override val createdAt = db.CREATED_AT
 
@@ -150,6 +154,7 @@ object EventTables {
     object UserLandedTable : EventTable<UserLandedEventRecord, UserLandedEventTable> {
         override val db = UserLandedEventTable
 
+        override val id = db.ID
         override val projectId = db.PROJECT_ID
         override val createdAt = db.CREATED_AT
 

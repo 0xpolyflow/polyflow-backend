@@ -11,10 +11,12 @@ import polyflow.generated.jooq.udt.records.NetworkStateRecord
 import polyflow.generated.jooq.udt.records.WalletStateRecord
 import polyflow.util.UtcDateTime
 import polyflow.util.WalletAddress
+import java.util.UUID
 
 interface EventTable<R : Record, T : TableImpl<R>> {
     val db: T
 
+    val id: TableField<R, UUID>
     val projectId: TableField<R, ProjectId>
     val createdAt: TableField<R, UtcDateTime>
 

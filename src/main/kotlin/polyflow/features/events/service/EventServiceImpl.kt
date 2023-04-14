@@ -37,6 +37,14 @@ class EventServiceImpl(
 
     companion object : KLogging()
 
+    override fun findEventById(eventId: EventId, userId: UserId): EventResponse {
+        logger.info { "Request event by id: $eventId, userId: $userId" }
+
+        return eventRepository.findEventById(eventId)?.apply {
+            requireProjectAccess(userId, projectId, AccessType.READ)
+        } ?: throw ResourceNotFoundException("Event with given ID does not exist for specified project API key")
+    }
+
     override fun findEvents(
         userId: UserId,
         projectId: ProjectId,

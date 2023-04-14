@@ -18,6 +18,8 @@ import polyflow.generated.jooq.id.ProjectId
 import polyflow.util.UtcDateTime
 
 interface EventRepository {
+    fun findEventById(eventId: EventId): EventResponse?
+
     fun findEvents(
         projectId: ProjectId,
         from: UtcDateTime?,

@@ -53,6 +53,21 @@ class JooqEventRepository(private val dslContext: DSLContext) : EventRepository 
 
     companion object : KLogging()
 
+    override fun findEventById(eventId: EventId): EventResponse? {
+        logger.info { "Request event by id: $eventId" }
+
+        fun <R : Record, T : TableImpl<R>> EventTable<R, T>.byId(): R? =
+            dslContext.selectFrom(this.db)
+                .where(this.id.eq(eventId.value))
+                .fetchOne()
+
+        return EventTables.WalletConnectedTable.byId()?.toModel()
+            ?: EventTables.TxRequestTable.byId()?.toModel()
+            ?: EventTables.ErrorTable.byId()?.toModel()
+            ?: EventTables.BlockchainErrorTable.byId()?.toModel()
+            ?: EventTables.UserLandedTable.byId()?.toModel()
+    }
+
     override fun findEvents(
         projectId: ProjectId,
         from: UtcDateTime?,
