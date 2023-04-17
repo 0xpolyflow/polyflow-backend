@@ -5,7 +5,9 @@ package polyflow.features.events.repository
 import mu.KLogging
 import org.jooq.DSLContext
 import org.jooq.Record
+import org.jooq.Record1
 import org.jooq.SelectConditionStep
+import org.jooq.SelectField
 import org.jooq.impl.DSL
 import org.jooq.impl.TableImpl
 import org.springframework.stereotype.Repository
@@ -21,10 +23,16 @@ import polyflow.features.events.model.request.ErrorEventRequest
 import polyflow.features.events.model.request.TxRequestEventRequest
 import polyflow.features.events.model.request.UserLandedEventRequest
 import polyflow.features.events.model.request.WalletConnectedEventRequest
+import polyflow.features.events.model.request.filter.DeviceStateField
+import polyflow.features.events.model.request.filter.EventTrackerModelField
+import polyflow.features.events.model.request.filter.FieldGetter
 import polyflow.features.events.model.response.BlockchainErrorEvent
+import polyflow.features.events.model.response.DeviceStateUniqueValues
 import polyflow.features.events.model.response.ErrorEvent
 import polyflow.features.events.model.response.EventResponse
+import polyflow.features.events.model.response.EventTrackerModelUniqueValues
 import polyflow.features.events.model.response.TxRequestEvent
+import polyflow.features.events.model.response.UniqueValues
 import polyflow.features.events.model.response.UserLandedEvent
 import polyflow.features.events.model.response.WalletConnectedEvent
 import polyflow.generated.jooq.enums.TxStatus
@@ -113,6 +121,62 @@ class JooqEventRepository(private val dslContext: DSLContext) : EventRepository 
 
         return (walletConnectedEvents + txRequestEvents + errorEvents + blockchainErrorEvents + userLandedEvents)
             .sortedBy { it.createdAt.value }
+    }
+
+    override fun findUniqueValues(
+        fields: Set<FieldGetter>,
+        projectId: ProjectId,
+        from: UtcDateTime?,
+        to: UtcDateTime?,
+        eventFilter: EventFilter?
+    ): UniqueValues {
+
+        fun <T> fetchDistinct(table: EventTable<*, *>, field: FieldGetter): SelectConditionStep<Record1<T>> {
+            val conditions = listOfNotNull(
+                field.get(table).isNotNull,
+                table.projectId.eq(projectId),
+                from?.let { table.createdAt.le(it) },
+                to?.let { table.createdAt.ge(it) },
+                eventFilter?.createCondition(table)
+            )
+
+            @Suppress("UNCHECKED_CAST") // we need type info to combine multiple unions in fetchDistinctFromAllTables
+            return dslContext.selectDistinct(field.get(table) as SelectField<T>)
+                .where(DSL.and(conditions))
+        }
+
+        @Suppress("UNCHECKED_CAST") // casting from Set<*> to Set<T> - since we have only one field we use fetchSet(0)
+        fun <T> fetchDistinctFromAllTables(field: FieldGetter): Set<T> =
+            fetchDistinct<T>(EventTables.WalletConnectedTable, field)
+                .union(fetchDistinct(EventTables.TxRequestTable, field))
+                .union(fetchDistinct(EventTables.BlockchainErrorTable, field))
+                .union(fetchDistinct(EventTables.ErrorTable, field))
+                .union(fetchDistinct(EventTables.UserLandedTable, field))
+                .fetchSet(0) as Set<T>
+
+        val fetchedValues = fields.associateWith { fetchDistinctFromAllTables<Any>(it) }
+
+        return UniqueValues(
+            tracker = EventTrackerModelUniqueValues(
+                eventTracker = fetchedValues.forField(EventTrackerModelField.EVENT_TRACKER),
+                sessionId = fetchedValues.forField(EventTrackerModelField.SESSION_ID),
+                utmSource = fetchedValues.forField(EventTrackerModelField.UTM_SOURCE),
+                utmMedium = fetchedValues.forField(EventTrackerModelField.UTM_MEDIUM),
+                utmCampaign = fetchedValues.forField(EventTrackerModelField.UTM_CAMPAIGN),
+                utmContent = fetchedValues.forField(EventTrackerModelField.UTM_CONTENT),
+                utmTerm = fetchedValues.forField(EventTrackerModelField.UTM_TERM),
+                origin = fetchedValues.forField(EventTrackerModelField.ORIGIN),
+                path = fetchedValues.forField(EventTrackerModelField.PATH)
+            ),
+            device = DeviceStateUniqueValues(
+                os = fetchedValues.forField(DeviceStateField.OS),
+                browser = fetchedValues.forField(DeviceStateField.BROWSER),
+                country = fetchedValues.forField(DeviceStateField.COUNTRY),
+                screen = fetchedValues.forField<ScreenStateRecord>(DeviceStateField.SCREEN)
+                    ?.map { it.toModel() }?.toTypedArray(),
+                walletProvider = fetchedValues.forField(DeviceStateField.WALLET_PROVIDER)
+            )
+        )
     }
 
     override fun create(
@@ -344,17 +408,18 @@ private fun DeviceState.toRecord() =
         walletProvider = walletProvider
     )
 
+private fun ScreenStateRecord.toModel() =
+    ScreenState(
+        w = w!!,
+        h = h!!
+    )
+
 private fun DeviceStateRecord.toModel() =
     DeviceState(
         os = os,
         browser = browser,
         country = country,
-        screen = screen?.let {
-            ScreenState(
-                w = it.w!!,
-                h = it.h!!
-            )
-        },
+        screen = screen?.toModel(),
         walletProvider = walletProvider!!
     )
 
@@ -466,3 +531,8 @@ private fun UserLandedEventRecord.toModel() =
         device = device.toModel(),
         network = network?.toModel()
     )
+
+// Kotlin bullshit: inline functions cannot be nested inside other functions
+@Suppress("UNCHECKED_CAST")
+inline fun <reified T> Map<FieldGetter, Set<Any>>.forField(field: FieldGetter): Array<T>? =
+    (this[field] as? Set<T>)?.toTypedArray()

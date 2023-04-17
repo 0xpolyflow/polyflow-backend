@@ -6,10 +6,12 @@ import polyflow.features.events.model.request.ErrorEventRequest
 import polyflow.features.events.model.request.TxRequestEventRequest
 import polyflow.features.events.model.request.UserLandedEventRequest
 import polyflow.features.events.model.request.WalletConnectedEventRequest
+import polyflow.features.events.model.request.filter.FieldGetter
 import polyflow.features.events.model.response.BlockchainErrorEvent
 import polyflow.features.events.model.response.ErrorEvent
 import polyflow.features.events.model.response.EventResponse
 import polyflow.features.events.model.response.TxRequestEvent
+import polyflow.features.events.model.response.UniqueValues
 import polyflow.features.events.model.response.UserLandedEvent
 import polyflow.features.events.model.response.WalletConnectedEvent
 import polyflow.generated.jooq.enums.TxStatus
@@ -27,6 +29,15 @@ interface EventService {
         to: UtcDateTime?,
         eventFilter: EventFilter?
     ): List<EventResponse>
+
+    fun findUniqueValues(
+        fields: Set<FieldGetter>,
+        userId: UserId,
+        projectId: ProjectId,
+        from: UtcDateTime?,
+        to: UtcDateTime?,
+        eventFilter: EventFilter?
+    ): UniqueValues
 
     fun create(projectId: ProjectId, event: WalletConnectedEventRequest): WalletConnectedEvent
     fun create(projectId: ProjectId, event: TxRequestEventRequest): TxRequestEvent

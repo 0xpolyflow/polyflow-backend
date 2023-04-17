@@ -45,9 +45,12 @@ object EventTables {
         override val network = db.NETWORK
 
         override val walletAddress = wallet.subfield(WalletState.WALLET_STATE.WALLET_ADDRESS)
-        override val walletProvider = device.subfield(DeviceState.DEVICE_STATE.WALLET_PROVIDER)
-        override val country = device.subfield(DeviceState.DEVICE_STATE.COUNTRY)
+
+        override val os = device.subfield(DeviceState.DEVICE_STATE.OS)
         override val browser = device.subfield(DeviceState.DEVICE_STATE.BROWSER)
+        override val country = device.subfield(DeviceState.DEVICE_STATE.COUNTRY)
+        override val screen = device.subfield(DeviceState.DEVICE_STATE.SCREEN)
+        override val walletProvider = device.subfield(DeviceState.DEVICE_STATE.WALLET_PROVIDER)
 
         override val eventTracker = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.EVENT_TRACKER)
         override val sessionId = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.SESSION_ID)
@@ -77,9 +80,12 @@ object EventTables {
         override val network = db.NETWORK
 
         override val walletAddress = wallet.subfield(WalletState.WALLET_STATE.WALLET_ADDRESS)
-        override val walletProvider = device.subfield(DeviceState.DEVICE_STATE.WALLET_PROVIDER)
-        override val country = device.subfield(DeviceState.DEVICE_STATE.COUNTRY)
+
+        override val os = device.subfield(DeviceState.DEVICE_STATE.OS)
         override val browser = device.subfield(DeviceState.DEVICE_STATE.BROWSER)
+        override val country = device.subfield(DeviceState.DEVICE_STATE.COUNTRY)
+        override val screen = device.subfield(DeviceState.DEVICE_STATE.SCREEN)
+        override val walletProvider = device.subfield(DeviceState.DEVICE_STATE.WALLET_PROVIDER)
 
         override val eventTracker = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.EVENT_TRACKER)
         override val sessionId = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.SESSION_ID)
@@ -106,9 +112,12 @@ object EventTables {
         override val network = db.NETWORK
 
         override val walletAddress = wallet.subfield(WalletState.WALLET_STATE.WALLET_ADDRESS)
-        override val walletProvider = device.subfield(DeviceState.DEVICE_STATE.WALLET_PROVIDER)
-        override val country = device.subfield(DeviceState.DEVICE_STATE.COUNTRY)
+
+        override val os = device.subfield(DeviceState.DEVICE_STATE.OS)
         override val browser = device.subfield(DeviceState.DEVICE_STATE.BROWSER)
+        override val country = device.subfield(DeviceState.DEVICE_STATE.COUNTRY)
+        override val screen = device.subfield(DeviceState.DEVICE_STATE.SCREEN)
+        override val walletProvider = device.subfield(DeviceState.DEVICE_STATE.WALLET_PROVIDER)
 
         override val eventTracker = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.EVENT_TRACKER)
         override val sessionId = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.SESSION_ID)
@@ -135,9 +144,12 @@ object EventTables {
         override val network = db.NETWORK
 
         override val walletAddress = wallet.subfield(WalletState.WALLET_STATE.WALLET_ADDRESS)
-        override val walletProvider = device.subfield(DeviceState.DEVICE_STATE.WALLET_PROVIDER)
-        override val country = device.subfield(DeviceState.DEVICE_STATE.COUNTRY)
+
+        override val os = device.subfield(DeviceState.DEVICE_STATE.OS)
         override val browser = device.subfield(DeviceState.DEVICE_STATE.BROWSER)
+        override val country = device.subfield(DeviceState.DEVICE_STATE.COUNTRY)
+        override val screen = device.subfield(DeviceState.DEVICE_STATE.SCREEN)
+        override val walletProvider = device.subfield(DeviceState.DEVICE_STATE.WALLET_PROVIDER)
 
         override val eventTracker = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.EVENT_TRACKER)
         override val sessionId = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.SESSION_ID)
@@ -164,9 +176,12 @@ object EventTables {
         override val network = db.NETWORK
 
         override val walletAddress = wallet.subfield(WalletState.WALLET_STATE.WALLET_ADDRESS)
-        override val walletProvider = device.subfield(DeviceState.DEVICE_STATE.WALLET_PROVIDER)
-        override val country = device.subfield(DeviceState.DEVICE_STATE.COUNTRY)
+
+        override val os = device.subfield(DeviceState.DEVICE_STATE.OS)
         override val browser = device.subfield(DeviceState.DEVICE_STATE.BROWSER)
+        override val country = device.subfield(DeviceState.DEVICE_STATE.COUNTRY)
+        override val screen = device.subfield(DeviceState.DEVICE_STATE.SCREEN)
+        override val walletProvider = device.subfield(DeviceState.DEVICE_STATE.WALLET_PROVIDER)
 
         override val eventTracker = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.EVENT_TRACKER)
         override val sessionId = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.SESSION_ID)

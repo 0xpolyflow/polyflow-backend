@@ -8,6 +8,7 @@ import polyflow.generated.jooq.id.ProjectId
 import polyflow.generated.jooq.udt.records.DeviceStateRecord
 import polyflow.generated.jooq.udt.records.EventTrackerModelRecord
 import polyflow.generated.jooq.udt.records.NetworkStateRecord
+import polyflow.generated.jooq.udt.records.ScreenStateRecord
 import polyflow.generated.jooq.udt.records.WalletStateRecord
 import polyflow.util.UtcDateTime
 import polyflow.util.WalletAddress
@@ -26,9 +27,12 @@ interface EventTable<R : Record, T : TableImpl<R>> {
     val network: TableField<R, out NetworkStateRecord?>
 
     val walletAddress: Field<WalletAddress>
-    val walletProvider: Field<String>
-    val country: Field<String?>
+
+    val os: Field<String?>
     val browser: Field<String?>
+    val country: Field<String?>
+    val screen: Field<ScreenStateRecord?>
+    val walletProvider: Field<String>
 
     val eventTracker: Field<String>
     val sessionId: Field<String>

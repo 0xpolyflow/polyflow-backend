@@ -45,6 +45,22 @@ input DeviceStateFilter {
     walletProvider: String
 }
 
+enum DeviceStateField {
+    OS,
+    BROWSER,
+    COUNTRY,
+    SCREEN,
+    WALLET_PROVIDER
+}
+
+type DeviceStateUniqueValues {
+    os: [String!]
+    browser: [String!]
+    country: [String!]
+    screen: [ScreenState!]
+    walletProvider: [String!]
+}
+
 ## EventTrackerModel
 type EventTrackerModel {
     eventTracker: String!
@@ -97,6 +113,18 @@ enum EventTrackerModelField {
     PATH
 }
 
+type EventTrackerModelUniqueValues {
+    eventTracker: [String!]
+    sessionId: [String!]
+    utmSource: [String!]
+    utmMedium: [String!]
+    utmCampaign: [String!]
+    utmContent: [String!]
+    utmTerm: [String!]
+    origin: [String!]
+    path: [String!]
+}
+
 ## NetworkState
 type NetworkState {
     chainId: Long!
@@ -116,13 +144,13 @@ input NetworkStateFilter {
     blockHeight: BigInteger
 }
 
+## TxData
 enum TxStatus {
     PENDING,
     SUCCESS,
     FAILURE
 }
 
-## TxData
 type TxData {
     from: String!
     to: String
@@ -346,10 +374,24 @@ input EventFilter {
     network: NetworkStateFilter
 }
 
+type UniqueValues {
+    tracker: EventTrackerModelUniqueValues!
+    device: DeviceStateUniqueValues!
+}
+
 type Query {
     findEventById(id: UUID!): Event!
 
     findEvents(from: DateTime, to: DateTime, projectId: UUID!, filter: EventFilter): [Event!]!
+
+    findUniqueValues(
+        eventTrackerFields: [EventTrackerModelField!]!,
+        deviceStateFields: [DeviceStateField!]!,
+        projectId: UUID!,
+        from: DateTime,
+        to: DateTime,
+        filter: EventFilter
+    ): UniqueValues!
 
     #    - All queries should be fetchable with a time range: e.g.
     #    - from (unix timestamp)

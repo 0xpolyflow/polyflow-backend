@@ -10,10 +10,12 @@ import polyflow.features.events.model.request.ErrorEventRequest
 import polyflow.features.events.model.request.TxRequestEventRequest
 import polyflow.features.events.model.request.UserLandedEventRequest
 import polyflow.features.events.model.request.WalletConnectedEventRequest
+import polyflow.features.events.model.request.filter.FieldGetter
 import polyflow.features.events.model.response.BlockchainErrorEvent
 import polyflow.features.events.model.response.ErrorEvent
 import polyflow.features.events.model.response.EventResponse
 import polyflow.features.events.model.response.TxRequestEvent
+import polyflow.features.events.model.response.UniqueValues
 import polyflow.features.events.model.response.UserLandedEvent
 import polyflow.features.events.model.response.WalletConnectedEvent
 import polyflow.features.events.repository.EventRepository
@@ -60,6 +62,30 @@ class EventServiceImpl(
         requireProjectAccess(userId, projectId, AccessType.READ)
 
         return eventRepository.findEvents(
+            projectId = projectId,
+            from = from,
+            to = to,
+            eventFilter = eventFilter
+        )
+    }
+
+    override fun findUniqueValues(
+        fields: Set<FieldGetter>,
+        userId: UserId,
+        projectId: ProjectId,
+        from: UtcDateTime?,
+        to: UtcDateTime?,
+        eventFilter: EventFilter?
+    ): UniqueValues {
+        logger.info {
+            "Request to fetch unique values, fields: $fields, userId: $userId, projectId: $projectId," +
+                " from: $from, to: $to, eventFilter: $eventFilter"
+        }
+
+        requireProjectAccess(userId, projectId, AccessType.READ)
+
+        return eventRepository.findUniqueValues(
+            fields = fields,
             projectId = projectId,
             from = from,
             to = to,

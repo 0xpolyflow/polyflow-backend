@@ -12,10 +12,13 @@ import polyflow.features.events.model.request.ErrorEventRequest
 import polyflow.features.events.model.request.TxRequestEventRequest
 import polyflow.features.events.model.request.UserLandedEventRequest
 import polyflow.features.events.model.request.WalletConnectedEventRequest
+import polyflow.features.events.model.request.filter.DeviceStateField
+import polyflow.features.events.model.request.filter.EventTrackerModelField
 import polyflow.features.events.model.response.BlockchainErrorEvent
 import polyflow.features.events.model.response.ErrorEvent
 import polyflow.features.events.model.response.EventResponse
 import polyflow.features.events.model.response.TxRequestEvent
+import polyflow.features.events.model.response.UniqueValues
 import polyflow.features.events.model.response.UserLandedEvent
 import polyflow.features.events.model.response.WalletConnectedEvent
 import polyflow.features.events.service.EventService
@@ -53,6 +56,26 @@ class EventGraphQlController(
     ): List<EventResponse> {
         val user = Util.resolveUser(userRepository)
         return eventService.findEvents(
+            userId = user.id,
+            projectId = ProjectId(projectId),
+            from = from?.let(UtcDateTime::invoke),
+            to = to?.let(UtcDateTime::invoke),
+            eventFilter = filter
+        )
+    }
+
+    @QueryMapping
+    fun findUniqueValues(
+        eventTrackerFields: Array<EventTrackerModelField>,
+        deviceStateFields: Array<DeviceStateField>,
+        projectId: UUID,
+        from: OffsetDateTime?,
+        to: OffsetDateTime?,
+        filter: EventFilter?
+    ): UniqueValues {
+        val user = Util.resolveUser(userRepository)
+        return eventService.findUniqueValues(
+            fields = eventTrackerFields.toSet() + deviceStateFields.toSet(),
             userId = user.id,
             projectId = ProjectId(projectId),
             from = from?.let(UtcDateTime::invoke),
