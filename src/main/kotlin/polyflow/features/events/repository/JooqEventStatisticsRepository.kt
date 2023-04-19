@@ -20,6 +20,7 @@ import polyflow.features.events.model.response.IntTimespanWithAverage
 import polyflow.features.events.model.response.MovingAverageTimespanValues
 import polyflow.features.events.model.response.ProjectUserStats
 import polyflow.features.events.model.response.SessionEventsInfo
+import polyflow.features.events.model.response.UserEventsInfo
 import polyflow.features.events.model.response.UsersWalletsAndTransactionsInfo
 import polyflow.features.events.model.response.WalletConnectionsAndTransactionsInfo
 import polyflow.generated.jooq.enums.TxStatus
@@ -261,14 +262,14 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
 
         data class Select(
             val count: Int,
-            val wallets: Array<WalletAddress>,
+            val wallets: Set<WalletAddress>,
             val devices: Set<DeviceStateModel>,
             val firstEventDateTime: UtcDateTime
         )
 
         val EMPTY_SELECT = Select(
             count = 0,
-            wallets = emptyArray(),
+            wallets = emptySet(),
             devices = emptySet(),
             firstEventDateTime = UtcDateTime(OffsetDateTime.parse("9999-12-31T23:59:59Z"))
         )
@@ -294,7 +295,7 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
                 .fetchMap({ it.component1() }) {
                     Select(
                         count = it.component2() ?: 0,
-                        wallets = it.component3() ?: emptyArray(),
+                        wallets = it.component3()?.toSet() ?: emptySet(),
                         devices = it.component4()?.map { r -> r.toModel() }?.toSet() ?: emptySet(),
                         firstEventDateTime = it.component5() ?: EMPTY_SELECT.firstEventDateTime
                     )
@@ -312,7 +313,7 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
             val errors = errorEventCounts[key] ?: EMPTY_SELECT
 
             val count = blockchainErrors.count + errors.count
-            val wallets = blockchainErrors.wallets.toSet() + errors.wallets
+            val wallets = blockchainErrors.wallets + errors.wallets
             val devices = blockchainErrors.devices + errors.devices
 
             SessionEventInfoCollector(
@@ -334,7 +335,7 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
             val userLanded = userLandedEventCounts[key] ?: EMPTY_SELECT
 
             val count = walletEvents.count + txRequests.count + userLanded.count
-            val wallets = walletEvents.wallets.toSet() + txRequests.wallets + userLanded.wallets
+            val wallets = walletEvents.wallets + txRequests.wallets + userLanded.wallets
             val devices = walletEvents.devices + txRequests.devices + userLanded.devices
 
             SessionEventInfoCollector(
@@ -367,6 +368,157 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
 
             SessionEventsInfo(
                 sessionId = key,
+                totalEventCount = (errors?.totalEventCount ?: 0) + (other?.totalEventCount ?: 0),
+                totalErrorEventCount = errors?.totalErrorEventCount ?: 0,
+                walletAddresses = (errorWallets + otherWallets).map { it.rawValue }.toTypedArray(),
+                hasConnectedWallet = other?.hasConnectedWallet ?: false,
+                hasExecutedTransaction = other?.hasExecutedTransaction ?: false,
+                devices = (errorDevices + otherDevices).toTypedArray(),
+                firstEventDateTime = errorFirstEventDateTime.min(otherFirstEventDateTime).value
+            )
+        }
+
+        return allCounts.toTypedArray()
+    }
+
+    // TODO improve efficiency
+    // TODO shares a lot of logic with listSessions
+    @Suppress("LongMethod", "ComplexMethod")
+    override fun listUsers(projectId: ProjectId, eventFilter: EventFilter?): Array<UserEventsInfo> {
+        logger.debug { "List users, projectId: $projectId, eventFilter: $eventFilter" }
+
+        data class UserEventInfoCollector(
+            val userId: String,
+            val sessionIds: Set<String>,
+            val totalEventCount: Int,
+            val totalErrorEventCount: Int,
+            val walletAddresses: Set<WalletAddress>,
+            val hasConnectedWallet: Boolean,
+            val hasExecutedTransaction: Boolean,
+            val devices: Set<DeviceStateModel>,
+            val firstEventDateTime: UtcDateTime
+        )
+
+        data class Select(
+            val count: Int,
+            val sessions: Set<String>,
+            val wallets: Set<WalletAddress>,
+            val devices: Set<DeviceStateModel>,
+            val firstEventDateTime: UtcDateTime
+        )
+
+        val EMPTY_SELECT = Select(
+            count = 0,
+            sessions = emptySet(),
+            wallets = emptySet(),
+            devices = emptySet(),
+            firstEventDateTime = UtcDateTime(OffsetDateTime.parse("9999-12-31T23:59:59Z"))
+        )
+
+        fun fetchEventCount(table: EventTable<*, *>) =
+            dslContext.select(
+                table.userId,
+                DSL.count(),
+                PostgresDSL.arrayAggDistinct(table.sessionId).filterWhere(table.sessionId.isNotNull),
+                PostgresDSL.arrayAggDistinct(table.walletAddress).filterWhere(table.walletAddress.isNotNull),
+                PostgresDSL.arrayAggDistinct(table.device).filterWhere(table.device.isNotNull),
+                DSL.min(table.createdAt)
+            )
+                .from(table.db)
+                .where(
+                    DSL.and(
+                        listOfNotNull(
+                            table.projectId.eq(projectId),
+                            eventFilter?.createCondition(table)
+                        )
+                    )
+                )
+                .groupBy(table.userId)
+                .fetchMap({ it.component1() }) {
+                    Select(
+                        count = it.component2() ?: 0,
+                        sessions = it.component3()?.toSet() ?: emptySet(),
+                        wallets = it.component4()?.toSet() ?: emptySet(),
+                        devices = it.component5()?.map { r -> r.toModel() }?.toSet() ?: emptySet(),
+                        firstEventDateTime = it.component6() ?: EMPTY_SELECT.firstEventDateTime
+                    )
+                }
+
+        val walletEventCounts = fetchEventCount(EventTables.WalletConnectedTable)
+        val txRequestEventCounts = fetchEventCount(EventTables.TxRequestTable)
+        val blockchainErrorEventCounts = fetchEventCount(EventTables.BlockchainErrorTable)
+        val errorEventCounts = fetchEventCount(EventTables.ErrorTable)
+        val userLandedEventCounts = fetchEventCount(EventTables.UserLandedTable)
+
+        val errorKeys = errorEventCounts.keys + blockchainErrorEventCounts.keys
+        val errorCounts = errorKeys.associateWith { key ->
+            val blockchainErrors = blockchainErrorEventCounts[key] ?: EMPTY_SELECT
+            val errors = errorEventCounts[key] ?: EMPTY_SELECT
+
+            val count = blockchainErrors.count + errors.count
+            val sessions = blockchainErrors.sessions + errors.sessions
+            val wallets = blockchainErrors.wallets + errors.wallets
+            val devices = blockchainErrors.devices + errors.devices
+
+            UserEventInfoCollector(
+                userId = key,
+                sessionIds = sessions,
+                totalErrorEventCount = count,
+                totalEventCount = count,
+                walletAddresses = wallets,
+                hasConnectedWallet = false,
+                hasExecutedTransaction = false,
+                devices = devices,
+                firstEventDateTime = blockchainErrors.firstEventDateTime.min(errors.firstEventDateTime)
+            )
+        }
+
+        val otherKeys = walletEventCounts.keys + txRequestEventCounts.keys + userLandedEventCounts.keys
+        val otherCounts = otherKeys.associateWith { key ->
+            val walletEvents = walletEventCounts[key] ?: EMPTY_SELECT
+            val txRequests = txRequestEventCounts[key] ?: EMPTY_SELECT
+            val userLanded = userLandedEventCounts[key] ?: EMPTY_SELECT
+
+            val count = walletEvents.count + txRequests.count + userLanded.count
+            val sessions = walletEvents.sessions + txRequests.sessions + userLanded.sessions
+            val wallets = walletEvents.wallets + txRequests.wallets + userLanded.wallets
+            val devices = walletEvents.devices + txRequests.devices + userLanded.devices
+
+            UserEventInfoCollector(
+                userId = key,
+                sessionIds = sessions,
+                totalErrorEventCount = 0,
+                totalEventCount = count,
+                walletAddresses = wallets,
+                hasConnectedWallet = walletEvents.count > 0,
+                hasExecutedTransaction = txRequests.count > 0,
+                devices = devices,
+                firstEventDateTime = walletEvents.firstEventDateTime
+                    .min(txRequests.firstEventDateTime)
+                    .min(userLanded.firstEventDateTime)
+            )
+        }
+
+        val allKeys = errorKeys + otherKeys
+        val allCounts = allKeys.map { key ->
+            val errors = errorCounts[key]
+            val other = otherCounts[key]
+
+            val errorSessions = errors?.sessionIds ?: emptySet()
+            val otherSessions = other?.sessionIds ?: emptySet()
+
+            val errorWallets = errors?.walletAddresses ?: emptySet()
+            val otherWallets = other?.walletAddresses ?: emptySet()
+
+            val errorDevices = errors?.devices ?: emptySet()
+            val otherDevices = other?.devices ?: emptySet()
+
+            val errorFirstEventDateTime = errors?.firstEventDateTime ?: EMPTY_SELECT.firstEventDateTime
+            val otherFirstEventDateTime = other?.firstEventDateTime ?: EMPTY_SELECT.firstEventDateTime
+
+            UserEventsInfo(
+                userId = key,
+                sessionIds = (errorSessions + otherSessions).toTypedArray(),
                 totalEventCount = (errors?.totalEventCount ?: 0) + (other?.totalEventCount ?: 0),
                 totalErrorEventCount = errors?.totalErrorEventCount ?: 0,
                 walletAddresses = (errorWallets + otherWallets).map { it.rawValue }.toTypedArray(),

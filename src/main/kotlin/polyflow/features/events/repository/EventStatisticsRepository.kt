@@ -9,6 +9,7 @@ import polyflow.features.events.model.response.IntTimespanWithAverage
 import polyflow.features.events.model.response.MovingAverageTimespanValues
 import polyflow.features.events.model.response.ProjectUserStats
 import polyflow.features.events.model.response.SessionEventsInfo
+import polyflow.features.events.model.response.UserEventsInfo
 import polyflow.features.events.model.response.UsersWalletsAndTransactionsInfo
 import polyflow.features.events.model.response.WalletConnectionsAndTransactionsInfo
 import polyflow.generated.jooq.id.ProjectId
@@ -34,6 +35,7 @@ interface EventStatisticsRepository {
     fun listCountries(projectId: ProjectId, eventFilter: EventFilter?): Array<WalletConnectionsAndTransactionsInfo>
     fun listBrowsers(projectId: ProjectId, eventFilter: EventFilter?): Array<WalletConnectionsAndTransactionsInfo>
     fun listSessions(projectId: ProjectId, eventFilter: EventFilter?): Array<SessionEventsInfo>
+    fun listUsers(projectId: ProjectId, eventFilter: EventFilter?): Array<UserEventsInfo>
     fun projectUserStats(projectId: ProjectId, eventFilter: EventFilter?): ProjectUserStats
     fun getUserWalletAndTransactionStats(
         field: EventTrackerModelField,

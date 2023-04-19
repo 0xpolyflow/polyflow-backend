@@ -353,6 +353,18 @@ type SessionEventsInfo {
     firstEventDateTime: DateTime!
 }
 
+type UserEventsInfo {
+    userId: String!
+    sessionIds: [String!]!
+    totalEventCount: Int!
+    totalErrorEventCount: Int!
+    walletAddresses: [String!]!
+    hasConnectedWallet: Boolean!
+    hasExecutedTransaction: Boolean!
+    devices: [DeviceState!]!
+    firstEventDateTime: DateTime!
+}
+
 type ProjectUserStats {
     totalUsers: Int!
     usersWithWallet: Int!
@@ -458,6 +470,8 @@ type Query {
     listBrowsers(projectId: UUID!, filter: EventFilter): [WalletConnectionsAndTransactionsInfo!]!
 
     listSessions(projectId: UUID!, filter: EventFilter): [SessionEventsInfo!]!
+
+    listUsers(projectId: UUID!, filter: EventFilter): [UserEventsInfo!]!
 
     projectUserStats(projectId: UUID!, filter: EventFilter): ProjectUserStats!
 

@@ -13,6 +13,7 @@ import polyflow.features.events.model.response.IntTimespanWithAverage
 import polyflow.features.events.model.response.MovingAverageTimespanValues
 import polyflow.features.events.model.response.ProjectUserStats
 import polyflow.features.events.model.response.SessionEventsInfo
+import polyflow.features.events.model.response.UserEventsInfo
 import polyflow.features.events.model.response.UsersWalletsAndTransactionsInfo
 import polyflow.features.events.model.response.WalletConnectionsAndTransactionsInfo
 import polyflow.features.events.service.EventStatisticsService
@@ -291,6 +292,19 @@ class EventStatisticsGraphQlController(
     ): Array<SessionEventsInfo> {
         val user = Util.resolveUser(userRepository)
         return eventStatisticsService.listSessions(
+            projectId = ProjectId(projectId),
+            userId = user.id,
+            eventFilter = filter
+        )
+    }
+
+    @QueryMapping
+    fun listUsers(
+        @Argument projectId: UUID,
+        @Argument filter: EventFilter?
+    ): Array<UserEventsInfo> {
+        val user = Util.resolveUser(userRepository)
+        return eventStatisticsService.listUsers(
             projectId = ProjectId(projectId),
             userId = user.id,
             eventFilter = filter

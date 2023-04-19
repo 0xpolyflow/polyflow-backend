@@ -12,6 +12,7 @@ import polyflow.features.events.model.response.IntTimespanWithAverage
 import polyflow.features.events.model.response.MovingAverageTimespanValues
 import polyflow.features.events.model.response.ProjectUserStats
 import polyflow.features.events.model.response.SessionEventsInfo
+import polyflow.features.events.model.response.UserEventsInfo
 import polyflow.features.events.model.response.UsersWalletsAndTransactionsInfo
 import polyflow.features.events.model.response.WalletConnectionsAndTransactionsInfo
 import polyflow.features.events.repository.EventStatisticsRepository
@@ -161,6 +162,18 @@ class EventStatisticsServiceImpl(
         requireProjectReadAccess(userId, projectId)
 
         return eventStatisticsRepository.listSessions(projectId, eventFilter)
+    }
+
+    override fun listUsers(
+        projectId: ProjectId,
+        userId: UserId,
+        eventFilter: EventFilter?
+    ): Array<UserEventsInfo> {
+        logger.debug { "List users, projectId: $projectId, userId: $userId, eventFilter: $eventFilter" }
+
+        requireProjectReadAccess(userId, projectId)
+
+        return eventStatisticsRepository.listUsers(projectId, eventFilter)
     }
 
     override fun projectUserStats(
