@@ -19,5 +19,9 @@ data class DeviceState(
 
     @field:NotNull
     @field:MaxStringSize
-    val walletProvider: String
+    val walletProvider: String,
+
+    @field:NotNull
+    @field:MaxStringSize
+    val walletType: String
 )

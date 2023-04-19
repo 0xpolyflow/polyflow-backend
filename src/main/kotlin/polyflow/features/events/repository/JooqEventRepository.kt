@@ -174,7 +174,8 @@ class JooqEventRepository(private val dslContext: DSLContext) : EventRepository 
                 country = fetchedValues.forField(DeviceStateField.COUNTRY),
                 screen = fetchedValues.forField<ScreenStateRecord>(DeviceStateField.SCREEN)
                     ?.map { it.toModel() }?.toTypedArray(),
-                walletProvider = fetchedValues.forField(DeviceStateField.WALLET_PROVIDER)
+                walletProvider = fetchedValues.forField(DeviceStateField.WALLET_PROVIDER),
+                walletType = fetchedValues.forField(DeviceStateField.WALLET_TYPE)
             )
         )
     }
@@ -405,7 +406,8 @@ private fun DeviceState.toRecord() =
                 h = it.h
             )
         },
-        walletProvider = walletProvider
+        walletProvider = walletProvider,
+        walletType = walletType
     )
 
 private fun ScreenStateRecord.toModel() =
@@ -420,7 +422,8 @@ private fun DeviceStateRecord.toModel() =
         browser = browser,
         country = country,
         screen = screen?.toModel(),
-        walletProvider = walletProvider!!
+        walletProvider = walletProvider!!,
+        walletType = walletType!!
     )
 
 private fun NetworkState.toRecord() =

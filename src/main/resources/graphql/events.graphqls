@@ -27,6 +27,7 @@ type DeviceState {
     country: String
     screen: ScreenState
     walletProvider: String!
+    walletType: String!
 }
 
 input DeviceStateInput {
@@ -35,6 +36,7 @@ input DeviceStateInput {
     country: String
     screen: ScreenStateInput
     walletProvider: String!
+    walletType: String!
 }
 
 input DeviceStateFilter {
@@ -43,6 +45,7 @@ input DeviceStateFilter {
     country: String
     screen: ScreenStateFilter
     walletProvider: String
+    walletType: String
 }
 
 enum DeviceStateField {
@@ -50,7 +53,8 @@ enum DeviceStateField {
     BROWSER,
     COUNTRY,
     SCREEN,
-    WALLET_PROVIDER
+    WALLET_PROVIDER,
+    WALLET_TYPE
 }
 
 type DeviceStateUniqueValues {
@@ -59,6 +63,7 @@ type DeviceStateUniqueValues {
     country: [String!]
     screen: [ScreenState!]
     walletProvider: [String!]
+    walletType: [String!]
 }
 
 ## EventTrackerModel

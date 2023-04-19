@@ -33,6 +33,7 @@ interface EventTable<R : Record, T : TableImpl<R>> {
     val country: Field<String?>
     val screen: Field<ScreenStateRecord?>
     val walletProvider: Field<String>
+    val walletType: Field<String>
 
     val eventTracker: Field<String>
     val sessionId: Field<String>

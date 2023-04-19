@@ -52,6 +52,7 @@ data class EventFilter(
             device?.screen?.w?.let { eventTable.device.subfield(ds.SCREEN, scst.W).eq(it) },
             device?.screen?.h?.let { eventTable.device.subfield(ds.SCREEN, scst.H).eq(it) },
             device?.walletProvider?.let { eventTable.device.subfield(ds.WALLET_PROVIDER).eq(it) },
+            device?.walletType?.let { eventTable.device.subfield(ds.WALLET_TYPE).eq(it) },
 
             network?.chainId?.let { eventTable.network.subfield(ns.CHAIN_ID).eq(ChainId(it)) },
             network?.gasPrice?.let { eventTable.network.subfield(ns.GAS_PRICE).eq(it) },

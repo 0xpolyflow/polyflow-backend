@@ -8,5 +8,6 @@ enum class DeviceStateField(override val get: (EventTable<*, *>) -> Field<*>) : 
     BROWSER({ it.browser }),
     COUNTRY({ it.country }),
     SCREEN({ it.screen }),
-    WALLET_PROVIDER({ it.walletProvider })
+    WALLET_PROVIDER({ it.walletProvider }),
+    WALLET_TYPE({ it.walletType })
 }

@@ -7,5 +7,6 @@ data class DeviceStateUniqueValues(
     val browser: Array<String>?,
     val country: Array<String>?,
     val screen: Array<ScreenState>?,
-    val walletProvider: Array<String>?
+    val walletProvider: Array<String>?,
+    val walletType: Array<String>?
 )

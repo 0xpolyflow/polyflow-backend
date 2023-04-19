@@ -825,5 +825,6 @@ private fun DeviceStateRecord.toModel() =
                 h = it.h!!
             )
         },
-        walletProvider = walletProvider!!
+        walletProvider = walletProvider!!,
+        walletType = walletType!!
     )
