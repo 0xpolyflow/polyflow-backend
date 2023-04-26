@@ -397,7 +397,7 @@ type UniqueValues {
 }
 
 input Pagination {
-    limit: Int! = 100
+    limit: Int! = 30
     offset: Int! = 0
 }
 
