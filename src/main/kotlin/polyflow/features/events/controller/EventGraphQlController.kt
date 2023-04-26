@@ -14,6 +14,7 @@ import polyflow.features.events.model.request.UserLandedEventRequest
 import polyflow.features.events.model.request.WalletConnectedEventRequest
 import polyflow.features.events.model.request.filter.DeviceStateField
 import polyflow.features.events.model.request.filter.EventTrackerModelField
+import polyflow.features.events.model.request.filter.Pagination
 import polyflow.features.events.model.response.BlockchainErrorEvent
 import polyflow.features.events.model.response.ErrorEvent
 import polyflow.features.events.model.response.EventResponse
@@ -52,7 +53,8 @@ class EventGraphQlController(
         @Argument from: OffsetDateTime?,
         @Argument to: OffsetDateTime?,
         @Argument projectId: UUID,
-        @Argument filter: EventFilter?
+        @Argument filter: EventFilter?,
+        @Argument pagination: Pagination
     ): List<EventResponse> {
         val user = Util.resolveUser(userRepository)
         return eventService.findEvents(
@@ -60,18 +62,20 @@ class EventGraphQlController(
             projectId = ProjectId(projectId),
             from = from?.let(UtcDateTime::invoke),
             to = to?.let(UtcDateTime::invoke),
-            eventFilter = filter
+            eventFilter = filter,
+            pagination = pagination
         )
     }
 
     @QueryMapping
     fun findUniqueValues(
-        eventTrackerFields: Array<EventTrackerModelField>,
-        deviceStateFields: Array<DeviceStateField>,
-        projectId: UUID,
-        from: OffsetDateTime?,
-        to: OffsetDateTime?,
-        filter: EventFilter?
+        @Argument eventTrackerFields: Array<EventTrackerModelField>,
+        @Argument deviceStateFields: Array<DeviceStateField>,
+        @Argument projectId: UUID,
+        @Argument from: OffsetDateTime?,
+        @Argument to: OffsetDateTime?,
+        @Argument filter: EventFilter?,
+        @Argument pagination: Pagination
     ): UniqueValues {
         val user = Util.resolveUser(userRepository)
         return eventService.findUniqueValues(
@@ -80,7 +84,8 @@ class EventGraphQlController(
             projectId = ProjectId(projectId),
             from = from?.let(UtcDateTime::invoke),
             to = to?.let(UtcDateTime::invoke),
-            eventFilter = filter
+            eventFilter = filter,
+            pagination = pagination
         )
     }
 

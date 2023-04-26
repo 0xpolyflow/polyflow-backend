@@ -3,6 +3,7 @@ package polyflow.features.events.service
 import polyflow.features.events.model.params.EventFilter
 import polyflow.features.events.model.params.StatisticsQuery
 import polyflow.features.events.model.request.filter.EventTrackerModelField
+import polyflow.features.events.model.request.filter.Pagination
 import polyflow.features.events.model.response.AverageTimespanValues
 import polyflow.features.events.model.response.IntTimespanValues
 import polyflow.features.events.model.response.IntTimespanWithAverage
@@ -20,42 +21,50 @@ import polyflow.util.UtcDateTime
 interface EventStatisticsService {
     fun totalConnectedWallets(
         query: StatisticsQuery,
-        userId: UserId
+        userId: UserId,
+        pagination: Pagination
     ): Array<IntTimespanValues>
 
     fun totalNewWallets(
         query: StatisticsQuery,
-        userId: UserId
+        userId: UserId,
+        pagination: Pagination
     ): Array<IntTimespanValues>
 
     fun periodActiveWallets(
         query: StatisticsQuery,
-        userId: UserId
+        userId: UserId,
+        pagination: Pagination
     ): IntTimespanWithAverage
 
     fun totalTransactions(
         query: StatisticsQuery,
-        userId: UserId
+        userId: UserId,
+        pagination: Pagination
     ): Array<IntTimespanValues>
 
     fun totalSuccessfulTransactions(
         query: StatisticsQuery,
-        userId: UserId
+        userId: UserId,
+        pagination: Pagination
     ): Array<IntTimespanValues>
 
     fun totalCancelledTransactions(
         query: StatisticsQuery,
-        userId: UserId
+        userId: UserId,
+        pagination: Pagination
     ): Array<IntTimespanValues>
 
     fun averageTransactionsPerUser(
         query: StatisticsQuery,
-        userId: UserId
+        userId: UserId,
+        pagination: Pagination
     ): Array<AverageTimespanValues>
 
     fun averageTransactions(
         query: StatisticsQuery,
-        userId: UserId
+        userId: UserId,
+        pagination: Pagination
     ): MovingAverageTimespanValues
 
     fun minTransactionsInPeriod(
@@ -71,31 +80,36 @@ interface EventStatisticsService {
     fun listWalletProviders(
         projectId: ProjectId,
         userId: UserId,
-        eventFilter: EventFilter?
+        eventFilter: EventFilter?,
+        pagination: Pagination
     ): Array<WalletConnectionsAndTransactionsInfo>
 
     fun listCountries(
         projectId: ProjectId,
         userId: UserId,
-        eventFilter: EventFilter?
+        eventFilter: EventFilter?,
+        pagination: Pagination
     ): Array<WalletConnectionsAndTransactionsInfo>
 
     fun listBrowsers(
         projectId: ProjectId,
         userId: UserId,
-        eventFilter: EventFilter?
+        eventFilter: EventFilter?,
+        pagination: Pagination
     ): Array<WalletConnectionsAndTransactionsInfo>
 
     fun listSessions(
         projectId: ProjectId,
         userId: UserId,
-        eventFilter: EventFilter?
+        eventFilter: EventFilter?,
+        pagination: Pagination
     ): Array<SessionEventsInfo>
 
     fun listUsers(
         projectId: ProjectId,
         userId: UserId,
-        eventFilter: EventFilter?
+        eventFilter: EventFilter?,
+        pagination: Pagination
     ): Array<UserEventsInfo>
 
     fun projectUserStats(
@@ -110,6 +124,7 @@ interface EventStatisticsService {
         userId: UserId,
         from: UtcDateTime?,
         to: UtcDateTime?,
-        eventFilter: EventFilter?
+        eventFilter: EventFilter?,
+        pagination: Pagination
     ): Array<UsersWalletsAndTransactionsInfo>
 }

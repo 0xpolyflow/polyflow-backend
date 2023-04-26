@@ -7,6 +7,7 @@ import org.springframework.validation.annotation.Validated
 import polyflow.features.events.model.params.EventFilter
 import polyflow.features.events.model.params.StatisticsQuery
 import polyflow.features.events.model.request.filter.EventTrackerModelField
+import polyflow.features.events.model.request.filter.Pagination
 import polyflow.features.events.model.response.AverageTimespanValues
 import polyflow.features.events.model.response.IntTimespanValues
 import polyflow.features.events.model.response.IntTimespanWithAverage
@@ -42,7 +43,8 @@ class EventStatisticsGraphQlController(
         @Argument to: OffsetDateTime?,
         @Argument granularity: Duration?,
         @Argument projectId: UUID,
-        @Argument filter: EventFilter?
+        @Argument filter: EventFilter?,
+        @Argument pagination: Pagination
     ): Array<IntTimespanValues> {
         val user = Util.resolveUser(userRepository)
         return eventStatisticsService.totalConnectedWallets(
@@ -53,7 +55,8 @@ class EventStatisticsGraphQlController(
                 projectId = ProjectId(projectId),
                 eventFilter = filter
             ),
-            userId = user.id
+            userId = user.id,
+            pagination = pagination
         ).orSingleIntElement(from, to)
     }
 
@@ -63,7 +66,8 @@ class EventStatisticsGraphQlController(
         @Argument to: OffsetDateTime?,
         @Argument granularity: Duration?,
         @Argument projectId: UUID,
-        @Argument filter: EventFilter?
+        @Argument filter: EventFilter?,
+        @Argument pagination: Pagination
     ): Array<IntTimespanValues> {
         val user = Util.resolveUser(userRepository)
         return eventStatisticsService.totalNewWallets(
@@ -74,7 +78,8 @@ class EventStatisticsGraphQlController(
                 projectId = ProjectId(projectId),
                 eventFilter = filter
             ),
-            userId = user.id
+            userId = user.id,
+            pagination = pagination
         ).orSingleIntElement(from, to)
     }
 
@@ -84,7 +89,8 @@ class EventStatisticsGraphQlController(
         @Argument to: OffsetDateTime?,
         @Argument granularity: Duration?,
         @Argument projectId: UUID,
-        @Argument filter: EventFilter?
+        @Argument filter: EventFilter?,
+        @Argument pagination: Pagination
     ): IntTimespanWithAverage {
         val user = Util.resolveUser(userRepository)
         return eventStatisticsService.periodActiveWallets(
@@ -95,7 +101,8 @@ class EventStatisticsGraphQlController(
                 projectId = ProjectId(projectId),
                 eventFilter = filter
             ),
-            userId = user.id
+            userId = user.id,
+            pagination = pagination
         )
     }
 
@@ -105,7 +112,8 @@ class EventStatisticsGraphQlController(
         @Argument to: OffsetDateTime?,
         @Argument granularity: Duration?,
         @Argument projectId: UUID,
-        @Argument filter: EventFilter?
+        @Argument filter: EventFilter?,
+        @Argument pagination: Pagination
     ): Array<IntTimespanValues> {
         val user = Util.resolveUser(userRepository)
         return eventStatisticsService.totalTransactions(
@@ -116,7 +124,8 @@ class EventStatisticsGraphQlController(
                 projectId = ProjectId(projectId),
                 eventFilter = filter
             ),
-            userId = user.id
+            userId = user.id,
+            pagination = pagination
         ).orSingleIntElement(from, to)
     }
 
@@ -126,7 +135,8 @@ class EventStatisticsGraphQlController(
         @Argument to: OffsetDateTime?,
         @Argument granularity: Duration?,
         @Argument projectId: UUID,
-        @Argument filter: EventFilter?
+        @Argument filter: EventFilter?,
+        @Argument pagination: Pagination
     ): Array<IntTimespanValues> {
         val user = Util.resolveUser(userRepository)
         return eventStatisticsService.totalSuccessfulTransactions(
@@ -137,7 +147,8 @@ class EventStatisticsGraphQlController(
                 projectId = ProjectId(projectId),
                 eventFilter = filter
             ),
-            userId = user.id
+            userId = user.id,
+            pagination = pagination
         ).orSingleIntElement(from, to)
     }
 
@@ -147,7 +158,8 @@ class EventStatisticsGraphQlController(
         @Argument to: OffsetDateTime?,
         @Argument granularity: Duration?,
         @Argument projectId: UUID,
-        @Argument filter: EventFilter?
+        @Argument filter: EventFilter?,
+        @Argument pagination: Pagination
     ): Array<IntTimespanValues> {
         val user = Util.resolveUser(userRepository)
         return eventStatisticsService.totalCancelledTransactions(
@@ -158,7 +170,8 @@ class EventStatisticsGraphQlController(
                 projectId = ProjectId(projectId),
                 eventFilter = filter
             ),
-            userId = user.id
+            userId = user.id,
+            pagination = pagination
         ).orSingleIntElement(from, to)
     }
 
@@ -168,7 +181,8 @@ class EventStatisticsGraphQlController(
         @Argument to: OffsetDateTime?,
         @Argument granularity: Duration?,
         @Argument projectId: UUID,
-        @Argument filter: EventFilter?
+        @Argument filter: EventFilter?,
+        @Argument pagination: Pagination
     ): Array<AverageTimespanValues> {
         val user = Util.resolveUser(userRepository)
         return eventStatisticsService.averageTransactionsPerUser(
@@ -179,7 +193,8 @@ class EventStatisticsGraphQlController(
                 projectId = ProjectId(projectId),
                 eventFilter = filter
             ),
-            userId = user.id
+            userId = user.id,
+            pagination = pagination
         ).orSingleDoubleElement(from, to)
     }
 
@@ -189,7 +204,8 @@ class EventStatisticsGraphQlController(
         @Argument to: OffsetDateTime?,
         @Argument granularity: Duration?,
         @Argument projectId: UUID,
-        @Argument filter: EventFilter?
+        @Argument filter: EventFilter?,
+        @Argument pagination: Pagination
     ): MovingAverageTimespanValues {
         val user = Util.resolveUser(userRepository)
         return eventStatisticsService.averageTransactions(
@@ -200,7 +216,8 @@ class EventStatisticsGraphQlController(
                 projectId = ProjectId(projectId),
                 eventFilter = filter
             ),
-            userId = user.id
+            userId = user.id,
+            pagination = pagination
         )
     }
 
@@ -249,65 +266,75 @@ class EventStatisticsGraphQlController(
     @QueryMapping
     fun listWalletProviders(
         @Argument projectId: UUID,
-        @Argument filter: EventFilter?
+        @Argument filter: EventFilter?,
+        @Argument pagination: Pagination
     ): Array<WalletConnectionsAndTransactionsInfo> {
         val user = Util.resolveUser(userRepository)
         return eventStatisticsService.listWalletProviders(
             projectId = ProjectId(projectId),
             userId = user.id,
-            eventFilter = filter
+            eventFilter = filter,
+            pagination = pagination
         )
     }
 
     @QueryMapping
     fun listCountries(
         @Argument projectId: UUID,
-        @Argument filter: EventFilter?
+        @Argument filter: EventFilter?,
+        @Argument pagination: Pagination
     ): Array<WalletConnectionsAndTransactionsInfo> {
         val user = Util.resolveUser(userRepository)
         return eventStatisticsService.listCountries(
             projectId = ProjectId(projectId),
             userId = user.id,
-            eventFilter = filter
+            eventFilter = filter,
+            pagination = pagination
         )
     }
 
     @QueryMapping
     fun listBrowsers(
         @Argument projectId: UUID,
-        @Argument filter: EventFilter?
+        @Argument filter: EventFilter?,
+        @Argument pagination: Pagination
     ): Array<WalletConnectionsAndTransactionsInfo> {
         val user = Util.resolveUser(userRepository)
         return eventStatisticsService.listBrowsers(
             projectId = ProjectId(projectId),
             userId = user.id,
-            eventFilter = filter
+            eventFilter = filter,
+            pagination = pagination
         )
     }
 
     @QueryMapping
     fun listSessions(
         @Argument projectId: UUID,
-        @Argument filter: EventFilter?
+        @Argument filter: EventFilter?,
+        @Argument pagination: Pagination
     ): Array<SessionEventsInfo> {
         val user = Util.resolveUser(userRepository)
         return eventStatisticsService.listSessions(
             projectId = ProjectId(projectId),
             userId = user.id,
-            eventFilter = filter
+            eventFilter = filter,
+            pagination = pagination
         )
     }
 
     @QueryMapping
     fun listUsers(
         @Argument projectId: UUID,
-        @Argument filter: EventFilter?
+        @Argument filter: EventFilter?,
+        @Argument pagination: Pagination
     ): Array<UserEventsInfo> {
         val user = Util.resolveUser(userRepository)
         return eventStatisticsService.listUsers(
             projectId = ProjectId(projectId),
             userId = user.id,
-            eventFilter = filter
+            eventFilter = filter,
+            pagination = pagination
         )
     }
 
@@ -330,7 +357,8 @@ class EventStatisticsGraphQlController(
         @Argument projectId: UUID,
         @Argument from: OffsetDateTime?,
         @Argument to: OffsetDateTime?,
-        @Argument filter: EventFilter?
+        @Argument filter: EventFilter?,
+        @Argument pagination: Pagination
     ): Array<UsersWalletsAndTransactionsInfo> {
         val user = Util.resolveUser(userRepository)
         return eventStatisticsService.getUserWalletAndTransactionStats(
@@ -339,7 +367,8 @@ class EventStatisticsGraphQlController(
             userId = user.id,
             from = from?.let(UtcDateTime::invoke),
             to = to?.let(UtcDateTime::invoke),
-            eventFilter = filter
+            eventFilter = filter,
+            pagination = pagination
         )
     }
 

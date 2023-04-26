@@ -396,10 +396,15 @@ type UniqueValues {
     device: DeviceStateUniqueValues!
 }
 
+input Pagination {
+    limit: Int! = 100
+    offset: Int! = 0
+}
+
 type Query {
     findEventById(id: UUID!): Event!
 
-    findEvents(from: DateTime, to: DateTime, projectId: UUID!, filter: EventFilter): [Event!]!
+    findEvents(from: DateTime, to: DateTime, projectId: UUID!, filter: EventFilter, pagination: Pagination! = {}): [Event!]!
 
     findUniqueValues(
         eventTrackerFields: [EventTrackerModelField!]!,
@@ -407,7 +412,8 @@ type Query {
         projectId: UUID!,
         from: DateTime,
         to: DateTime,
-        filter: EventFilter
+        filter: EventFilter,
+        pagination: Pagination! = {}
     ): UniqueValues!
 
     #    - All queries should be fetchable with a time range: e.g.
@@ -443,39 +449,39 @@ type Query {
     #    - transaction browsers
     #    - transaction browsers (unique wallets)
 
-    totalConnectedWallets(from: DateTime, to: DateTime, granularity: Duration, projectId: UUID!, filter: EventFilter): [IntTimespanValues!]!
+    totalConnectedWallets(from: DateTime, to: DateTime, granularity: Duration, projectId: UUID!, filter: EventFilter, pagination: Pagination! = {}): [IntTimespanValues!]!
 
-    totalNewWallets(from: DateTime, to: DateTime, granularity: Duration, projectId: UUID!, filter: EventFilter): [IntTimespanValues!]!
+    totalNewWallets(from: DateTime, to: DateTime, granularity: Duration, projectId: UUID!, filter: EventFilter, pagination: Pagination! = {}): [IntTimespanValues!]!
 
-    periodActiveWallets(from: DateTime, to: DateTime, granularity: Duration, projectId: UUID!, filter: EventFilter): IntTimespanWithAverage!
+    periodActiveWallets(from: DateTime, to: DateTime, granularity: Duration, projectId: UUID!, filter: EventFilter, pagination: Pagination! = {}): IntTimespanWithAverage!
 
-    totalTransactions(from: DateTime, to: DateTime, granularity: Duration, projectId: UUID!, filter: EventFilter): [IntTimespanValues!]!
+    totalTransactions(from: DateTime, to: DateTime, granularity: Duration, projectId: UUID!, filter: EventFilter, pagination: Pagination! = {}): [IntTimespanValues!]!
 
-    totalSuccessfulTransactions(from: DateTime, to: DateTime, granularity: Duration, projectId: UUID!, filter: EventFilter): [IntTimespanValues!]!
+    totalSuccessfulTransactions(from: DateTime, to: DateTime, granularity: Duration, projectId: UUID!, filter: EventFilter, pagination: Pagination! = {}): [IntTimespanValues!]!
 
-    totalCancelledTransactions(from: DateTime, to: DateTime, granularity: Duration, projectId: UUID!, filter: EventFilter): [IntTimespanValues!]!
+    totalCancelledTransactions(from: DateTime, to: DateTime, granularity: Duration, projectId: UUID!, filter: EventFilter, pagination: Pagination! = {}): [IntTimespanValues!]!
 
-    averageTransactionsPerUser(from: DateTime, to: DateTime, granularity: Duration, projectId: UUID!, filter: EventFilter): [AverageTimespanValues!]!
+    averageTransactionsPerUser(from: DateTime, to: DateTime, granularity: Duration, projectId: UUID!, filter: EventFilter, pagination: Pagination! = {}): [AverageTimespanValues!]!
 
-    averageTransactions(from: DateTime, to: DateTime, granularity: Duration, projectId: UUID!, filter: EventFilter): MovingAverageTimespanValues!
+    averageTransactions(from: DateTime, to: DateTime, granularity: Duration, projectId: UUID!, filter: EventFilter, pagination: Pagination! = {}): MovingAverageTimespanValues!
 
     minTransactionsInPeriod(from: DateTime, to: DateTime, granularity: Duration, projectId: UUID!, filter: EventFilter): Int!
 
     maxTransactionsInPeriod(from: DateTime, to: DateTime, granularity: Duration, projectId: UUID!, filter: EventFilter): Int!
 
-    listWalletProviders(projectId: UUID!, filter: EventFilter): [WalletConnectionsAndTransactionsInfo!]!
+    listWalletProviders(projectId: UUID!, filter: EventFilter, pagination: Pagination! = {}): [WalletConnectionsAndTransactionsInfo!]!
 
-    listCountries(projectId: UUID!, filter: EventFilter): [WalletConnectionsAndTransactionsInfo!]!
+    listCountries(projectId: UUID!, filter: EventFilter, pagination: Pagination! = {}): [WalletConnectionsAndTransactionsInfo!]!
 
-    listBrowsers(projectId: UUID!, filter: EventFilter): [WalletConnectionsAndTransactionsInfo!]!
+    listBrowsers(projectId: UUID!, filter: EventFilter, pagination: Pagination! = {}): [WalletConnectionsAndTransactionsInfo!]!
 
-    listSessions(projectId: UUID!, filter: EventFilter): [SessionEventsInfo!]!
+    listSessions(projectId: UUID!, filter: EventFilter, pagination: Pagination! = {}): [SessionEventsInfo!]!
 
-    listUsers(projectId: UUID!, filter: EventFilter): [UserEventsInfo!]!
+    listUsers(projectId: UUID!, filter: EventFilter, pagination: Pagination! = {}): [UserEventsInfo!]!
 
     projectUserStats(projectId: UUID!, filter: EventFilter): ProjectUserStats!
 
-    getUserWalletAndTransactionStats(field: EventTrackerModelField!, projectId: UUID!, from: DateTime, to: DateTime, filter: EventFilter): [UsersWalletsAndTransactionsInfo!]!
+    getUserWalletAndTransactionStats(field: EventTrackerModelField!, projectId: UUID!, from: DateTime, to: DateTime, filter: EventFilter, pagination: Pagination! = {}): [UsersWalletsAndTransactionsInfo!]!
 }
 
 type Mutation {

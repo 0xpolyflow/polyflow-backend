@@ -6,6 +6,7 @@ import polyflow.exception.AccessForbiddenException
 import polyflow.features.events.model.params.EventFilter
 import polyflow.features.events.model.params.StatisticsQuery
 import polyflow.features.events.model.request.filter.EventTrackerModelField
+import polyflow.features.events.model.request.filter.Pagination
 import polyflow.features.events.model.response.AverageTimespanValues
 import polyflow.features.events.model.response.IntTimespanValues
 import polyflow.features.events.model.response.IntTimespanWithAverage
@@ -32,72 +33,110 @@ class EventStatisticsServiceImpl(
 
     override fun totalConnectedWallets(
         query: StatisticsQuery,
-        userId: UserId
+        userId: UserId,
+        pagination: Pagination
     ): Array<IntTimespanValues> {
-        logger.debug { "Request to fetch total connected wallets, query: $query, userId: $userId" }
+        logger.debug {
+            "Request to fetch total connected wallets, query: $query, userId: $userId, pagination: $pagination"
+        }
 
         requireProjectReadAccess(userId, query.projectId)
 
-        return eventStatisticsRepository.totalConnectedWallets(query)
+        return eventStatisticsRepository.totalConnectedWallets(query, pagination)
     }
 
     override fun totalNewWallets(
         query: StatisticsQuery,
-        userId: UserId
+        userId: UserId,
+        pagination: Pagination
     ): Array<IntTimespanValues> {
-        logger.debug { "Request to fetch new connected wallets, query: $query, userId: $userId" }
+        logger.debug {
+            "Request to fetch new connected wallets, query: $query, userId: $userId, pagination: $pagination"
+        }
 
         requireProjectReadAccess(userId, query.projectId)
 
-        return eventStatisticsRepository.totalNewWallets(query)
+        return eventStatisticsRepository.totalNewWallets(query, pagination)
     }
 
-    override fun periodActiveWallets(query: StatisticsQuery, userId: UserId): IntTimespanWithAverage {
-        logger.debug { "Request to fetch period active wallets, query: $query, userId: $userId" }
+    override fun periodActiveWallets(
+        query: StatisticsQuery,
+        userId: UserId,
+        pagination: Pagination
+    ): IntTimespanWithAverage {
+        logger.debug {
+            "Request to fetch period active wallets, query: $query, userId: $userId, pagination: $pagination"
+        }
 
         requireProjectReadAccess(userId, query.projectId)
 
-        return eventStatisticsRepository.periodActiveWallets(query)
+        return eventStatisticsRepository.periodActiveWallets(query, pagination)
     }
 
-    override fun totalTransactions(query: StatisticsQuery, userId: UserId): Array<IntTimespanValues> {
-        logger.debug { "Request to fetch total transactions, query: $query, userId: $userId" }
+    override fun totalTransactions(
+        query: StatisticsQuery,
+        userId: UserId,
+        pagination: Pagination
+    ): Array<IntTimespanValues> {
+        logger.debug { "Request to fetch total transactions, query: $query, userId: $userId, pagination: $pagination" }
 
         requireProjectReadAccess(userId, query.projectId)
 
-        return eventStatisticsRepository.totalTransactions(query)
+        return eventStatisticsRepository.totalTransactions(query, pagination)
     }
 
-    override fun totalSuccessfulTransactions(query: StatisticsQuery, userId: UserId): Array<IntTimespanValues> {
-        logger.debug { "Request to fetch total successful transactions, query: $query, userId: $userId" }
+    override fun totalSuccessfulTransactions(
+        query: StatisticsQuery,
+        userId: UserId,
+        pagination: Pagination
+    ): Array<IntTimespanValues> {
+        logger.debug {
+            "Request to fetch total successful transactions, query: $query, userId: $userId, pagination: $pagination"
+        }
 
         requireProjectReadAccess(userId, query.projectId)
 
-        return eventStatisticsRepository.totalSuccessfulTransactions(query)
+        return eventStatisticsRepository.totalSuccessfulTransactions(query, pagination)
     }
 
-    override fun totalCancelledTransactions(query: StatisticsQuery, userId: UserId): Array<IntTimespanValues> {
-        logger.debug { "Request to fetch total cancelled transactions, query: $query, userId: $userId" }
+    override fun totalCancelledTransactions(
+        query: StatisticsQuery,
+        userId: UserId,
+        pagination: Pagination
+    ): Array<IntTimespanValues> {
+        logger.debug {
+            "Request to fetch total cancelled transactions, query: $query, userId: $userId, pagination: $pagination"
+        }
 
         requireProjectReadAccess(userId, query.projectId)
 
-        return eventStatisticsRepository.totalCancelledTransactions(query)
+        return eventStatisticsRepository.totalCancelledTransactions(query, pagination)
     }
 
-    override fun averageTransactionsPerUser(query: StatisticsQuery, userId: UserId): Array<AverageTimespanValues> {
-        logger.debug { "Request to average transactions per user, query: $query, userId: $userId" }
+    override fun averageTransactionsPerUser(
+        query: StatisticsQuery,
+        userId: UserId,
+        pagination: Pagination
+    ): Array<AverageTimespanValues> {
+        logger.debug {
+            "Request to average transactions per user, query: $query, userId: $userId, pagination: $pagination"
+        }
 
         requireProjectReadAccess(userId, query.projectId)
 
-        return eventStatisticsRepository.averageTransactionsPerUser(query)
+        return eventStatisticsRepository.averageTransactionsPerUser(query, pagination)
     }
 
-    override fun averageTransactions(query: StatisticsQuery, userId: UserId): MovingAverageTimespanValues {
-        logger.debug { "Request to average transactions, query: $query, userId: $userId" }
+    override fun averageTransactions(
+        query: StatisticsQuery,
+        userId: UserId,
+        pagination: Pagination
+    ): MovingAverageTimespanValues {
+        logger.debug { "Request to average transactions, query: $query, userId: $userId, pagination: $pagination" }
 
         requireProjectReadAccess(userId, query.projectId)
 
-        return eventStatisticsRepository.averageTransactions(query)
+        return eventStatisticsRepository.averageTransactions(query, pagination)
     }
 
     override fun minTransactionsInPeriod(query: StatisticsQuery, userId: UserId): Int {
@@ -119,61 +158,77 @@ class EventStatisticsServiceImpl(
     override fun listWalletProviders(
         projectId: ProjectId,
         userId: UserId,
-        eventFilter: EventFilter?
+        eventFilter: EventFilter?,
+        pagination: Pagination
     ): Array<WalletConnectionsAndTransactionsInfo> {
-        logger.debug { "List wallet providers, projectId: $projectId, userId: $userId, eventFilter: $eventFilter" }
+        logger.debug {
+            "List wallet providers, projectId: $projectId, userId: $userId, eventFilter: $eventFilter," +
+                " pagination: $pagination"
+        }
 
         requireProjectReadAccess(userId, projectId)
 
-        return eventStatisticsRepository.listWalletProviders(projectId, eventFilter)
+        return eventStatisticsRepository.listWalletProviders(projectId, eventFilter, pagination)
     }
 
     override fun listCountries(
         projectId: ProjectId,
         userId: UserId,
-        eventFilter: EventFilter?
+        eventFilter: EventFilter?,
+        pagination: Pagination
     ): Array<WalletConnectionsAndTransactionsInfo> {
-        logger.debug { "List countries, projectId: $projectId, userId: $userId, eventFilter: $eventFilter" }
+        logger.debug {
+            "List countries, projectId: $projectId, userId: $userId, eventFilter: $eventFilter, pagination: $pagination"
+        }
 
         requireProjectReadAccess(userId, projectId)
 
-        return eventStatisticsRepository.listCountries(projectId, eventFilter)
+        return eventStatisticsRepository.listCountries(projectId, eventFilter, pagination)
     }
 
     override fun listBrowsers(
         projectId: ProjectId,
         userId: UserId,
-        eventFilter: EventFilter?
+        eventFilter: EventFilter?,
+        pagination: Pagination
     ): Array<WalletConnectionsAndTransactionsInfo> {
-        logger.debug { "List browsers, projectId: $projectId, userId: $userId, eventFilter: $eventFilter" }
+        logger.debug {
+            "List browsers, projectId: $projectId, userId: $userId, eventFilter: $eventFilter, pagination: $pagination"
+        }
 
         requireProjectReadAccess(userId, projectId)
 
-        return eventStatisticsRepository.listBrowsers(projectId, eventFilter)
+        return eventStatisticsRepository.listBrowsers(projectId, eventFilter, pagination)
     }
 
     override fun listSessions(
         projectId: ProjectId,
         userId: UserId,
-        eventFilter: EventFilter?
+        eventFilter: EventFilter?,
+        pagination: Pagination
     ): Array<SessionEventsInfo> {
-        logger.debug { "List sessions, projectId: $projectId, userId: $userId, eventFilter: $eventFilter" }
+        logger.debug {
+            "List sessions, projectId: $projectId, userId: $userId, eventFilter: $eventFilter, pagination: $pagination"
+        }
 
         requireProjectReadAccess(userId, projectId)
 
-        return eventStatisticsRepository.listSessions(projectId, eventFilter)
+        return eventStatisticsRepository.listSessions(projectId, eventFilter, pagination)
     }
 
     override fun listUsers(
         projectId: ProjectId,
         userId: UserId,
-        eventFilter: EventFilter?
+        eventFilter: EventFilter?,
+        pagination: Pagination
     ): Array<UserEventsInfo> {
-        logger.debug { "List users, projectId: $projectId, userId: $userId, eventFilter: $eventFilter" }
+        logger.debug {
+            "List users, projectId: $projectId, userId: $userId, eventFilter: $eventFilter, pagination: $pagination"
+        }
 
         requireProjectReadAccess(userId, projectId)
 
-        return eventStatisticsRepository.listUsers(projectId, eventFilter)
+        return eventStatisticsRepository.listUsers(projectId, eventFilter, pagination)
     }
 
     override fun projectUserStats(
@@ -194,11 +249,12 @@ class EventStatisticsServiceImpl(
         userId: UserId,
         from: UtcDateTime?,
         to: UtcDateTime?,
-        eventFilter: EventFilter?
+        eventFilter: EventFilter?,
+        pagination: Pagination
     ): Array<UsersWalletsAndTransactionsInfo> {
         logger.debug {
             "Get project user, wallet and transaction stats, field: $field, projectId: $projectId, userId: $userId," +
-                " from: $from, to: $to, eventFilter: $eventFilter"
+                " from: $from, to: $to, eventFilter: $eventFilter, pagination: $pagination"
         }
 
         requireProjectReadAccess(userId, projectId)
@@ -208,7 +264,8 @@ class EventStatisticsServiceImpl(
             projectId = projectId,
             from = from,
             to = to,
-            eventFilter = eventFilter
+            eventFilter = eventFilter,
+            pagination = pagination
         )
     }
 

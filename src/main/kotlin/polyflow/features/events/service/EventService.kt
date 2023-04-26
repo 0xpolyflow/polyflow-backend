@@ -7,6 +7,7 @@ import polyflow.features.events.model.request.TxRequestEventRequest
 import polyflow.features.events.model.request.UserLandedEventRequest
 import polyflow.features.events.model.request.WalletConnectedEventRequest
 import polyflow.features.events.model.request.filter.FieldGetter
+import polyflow.features.events.model.request.filter.Pagination
 import polyflow.features.events.model.response.BlockchainErrorEvent
 import polyflow.features.events.model.response.ErrorEvent
 import polyflow.features.events.model.response.EventResponse
@@ -27,7 +28,8 @@ interface EventService {
         projectId: ProjectId,
         from: UtcDateTime?,
         to: UtcDateTime?,
-        eventFilter: EventFilter?
+        eventFilter: EventFilter?,
+        pagination: Pagination
     ): List<EventResponse>
 
     fun findUniqueValues(
@@ -36,7 +38,8 @@ interface EventService {
         projectId: ProjectId,
         from: UtcDateTime?,
         to: UtcDateTime?,
-        eventFilter: EventFilter?
+        eventFilter: EventFilter?,
+        pagination: Pagination
     ): UniqueValues
 
     fun create(projectId: ProjectId, event: WalletConnectedEventRequest): WalletConnectedEvent

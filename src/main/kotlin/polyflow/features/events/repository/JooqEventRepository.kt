@@ -26,6 +26,7 @@ import polyflow.features.events.model.request.WalletConnectedEventRequest
 import polyflow.features.events.model.request.filter.DeviceStateField
 import polyflow.features.events.model.request.filter.EventTrackerModelField
 import polyflow.features.events.model.request.filter.FieldGetter
+import polyflow.features.events.model.request.filter.Pagination
 import polyflow.features.events.model.response.BlockchainErrorEvent
 import polyflow.features.events.model.response.DeviceStateUniqueValues
 import polyflow.features.events.model.response.ErrorEvent
@@ -76,11 +77,13 @@ class JooqEventRepository(private val dslContext: DSLContext) : EventRepository 
             ?: EventTables.UserLandedTable.byId()?.toModel()
     }
 
+    // TODO optimize this query
     override fun findEvents(
         projectId: ProjectId,
         from: UtcDateTime?,
         to: UtcDateTime?,
-        eventFilter: EventFilter?
+        eventFilter: EventFilter?,
+        pagination: Pagination
     ): List<EventResponse> {
         logger.info { "Find events for projectId: $projectId, from: $from, to: $to, utmFilter: $eventFilter" }
 
@@ -121,14 +124,18 @@ class JooqEventRepository(private val dslContext: DSLContext) : EventRepository 
 
         return (walletConnectedEvents + txRequestEvents + errorEvents + blockchainErrorEvents + userLandedEvents)
             .sortedBy { it.createdAt.value }
+            .drop(pagination.offset)
+            .take(pagination.limit)
     }
 
+    // TODO optimize this query
     override fun findUniqueValues(
         fields: Set<FieldGetter>,
         projectId: ProjectId,
         from: UtcDateTime?,
         to: UtcDateTime?,
-        eventFilter: EventFilter?
+        eventFilter: EventFilter?,
+        pagination: Pagination
     ): UniqueValues {
 
         fun <T> fetchDistinct(table: EventTable<*, *>, field: FieldGetter): SelectConditionStep<Record1<T>> {
@@ -152,6 +159,8 @@ class JooqEventRepository(private val dslContext: DSLContext) : EventRepository 
                 .union(fetchDistinct(EventTables.BlockchainErrorTable, field))
                 .union(fetchDistinct(EventTables.ErrorTable, field))
                 .union(fetchDistinct(EventTables.UserLandedTable, field))
+                .limit(pagination.limit)
+                .offset(pagination.offset)
                 .fetchSet(0) as Set<T>
 
         val fetchedValues = fields.associateWith { fetchDistinctFromAllTables<Any>(it) }

@@ -11,6 +11,7 @@ import polyflow.features.events.model.request.TxRequestEventRequest
 import polyflow.features.events.model.request.UserLandedEventRequest
 import polyflow.features.events.model.request.WalletConnectedEventRequest
 import polyflow.features.events.model.request.filter.FieldGetter
+import polyflow.features.events.model.request.filter.Pagination
 import polyflow.features.events.model.response.BlockchainErrorEvent
 import polyflow.features.events.model.response.ErrorEvent
 import polyflow.features.events.model.response.EventResponse
@@ -52,11 +53,12 @@ class EventServiceImpl(
         projectId: ProjectId,
         from: UtcDateTime?,
         to: UtcDateTime?,
-        eventFilter: EventFilter?
+        eventFilter: EventFilter?,
+        pagination: Pagination
     ): List<EventResponse> {
         logger.info {
             "Request to fetch events, userId: $userId, projectId: $projectId," +
-                " from: $from, to: $to, eventFilter: $eventFilter"
+                " from: $from, to: $to, eventFilter: $eventFilter, pagination: $pagination"
         }
 
         requireProjectAccess(userId, projectId, AccessType.READ)
@@ -65,7 +67,8 @@ class EventServiceImpl(
             projectId = projectId,
             from = from,
             to = to,
-            eventFilter = eventFilter
+            eventFilter = eventFilter,
+            pagination = pagination
         )
     }
 
@@ -75,11 +78,12 @@ class EventServiceImpl(
         projectId: ProjectId,
         from: UtcDateTime?,
         to: UtcDateTime?,
-        eventFilter: EventFilter?
+        eventFilter: EventFilter?,
+        pagination: Pagination
     ): UniqueValues {
         logger.info {
             "Request to fetch unique values, fields: $fields, userId: $userId, projectId: $projectId," +
-                " from: $from, to: $to, eventFilter: $eventFilter"
+                " from: $from, to: $to, eventFilter: $eventFilter, pagination: $pagination"
         }
 
         requireProjectAccess(userId, projectId, AccessType.READ)
@@ -89,7 +93,8 @@ class EventServiceImpl(
             projectId = projectId,
             from = from,
             to = to,
-            eventFilter = eventFilter
+            eventFilter = eventFilter,
+            pagination = pagination
         )
     }
 

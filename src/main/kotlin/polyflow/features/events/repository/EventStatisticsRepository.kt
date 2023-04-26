@@ -3,6 +3,7 @@ package polyflow.features.events.repository
 import polyflow.features.events.model.params.EventFilter
 import polyflow.features.events.model.params.StatisticsQuery
 import polyflow.features.events.model.request.filter.EventTrackerModelField
+import polyflow.features.events.model.request.filter.Pagination
 import polyflow.features.events.model.response.AverageTimespanValues
 import polyflow.features.events.model.response.IntTimespanValues
 import polyflow.features.events.model.response.IntTimespanWithAverage
@@ -17,31 +18,43 @@ import polyflow.util.UtcDateTime
 
 @Suppress("TooManyFunctions")
 interface EventStatisticsRepository {
-    fun totalConnectedWallets(query: StatisticsQuery): Array<IntTimespanValues>
-    fun totalNewWallets(query: StatisticsQuery): Array<IntTimespanValues>
-    fun periodActiveWallets(query: StatisticsQuery): IntTimespanWithAverage
-    fun totalTransactions(query: StatisticsQuery): Array<IntTimespanValues>
-    fun totalSuccessfulTransactions(query: StatisticsQuery): Array<IntTimespanValues>
-    fun totalCancelledTransactions(query: StatisticsQuery): Array<IntTimespanValues>
-    fun averageTransactionsPerUser(query: StatisticsQuery): Array<AverageTimespanValues>
-    fun averageTransactions(query: StatisticsQuery): MovingAverageTimespanValues
+    fun totalConnectedWallets(query: StatisticsQuery, pagination: Pagination): Array<IntTimespanValues>
+    fun totalNewWallets(query: StatisticsQuery, pagination: Pagination): Array<IntTimespanValues>
+    fun periodActiveWallets(query: StatisticsQuery, pagination: Pagination): IntTimespanWithAverage
+    fun totalTransactions(query: StatisticsQuery, pagination: Pagination): Array<IntTimespanValues>
+    fun totalSuccessfulTransactions(query: StatisticsQuery, pagination: Pagination): Array<IntTimespanValues>
+    fun totalCancelledTransactions(query: StatisticsQuery, pagination: Pagination): Array<IntTimespanValues>
+    fun averageTransactionsPerUser(query: StatisticsQuery, pagination: Pagination): Array<AverageTimespanValues>
+    fun averageTransactions(query: StatisticsQuery, pagination: Pagination): MovingAverageTimespanValues
     fun minTransactionsInPeriod(query: StatisticsQuery): Int
     fun maxTransactionsInPeriod(query: StatisticsQuery): Int
     fun listWalletProviders(
         projectId: ProjectId,
-        eventFilter: EventFilter?
+        eventFilter: EventFilter?,
+        pagination: Pagination
     ): Array<WalletConnectionsAndTransactionsInfo>
 
-    fun listCountries(projectId: ProjectId, eventFilter: EventFilter?): Array<WalletConnectionsAndTransactionsInfo>
-    fun listBrowsers(projectId: ProjectId, eventFilter: EventFilter?): Array<WalletConnectionsAndTransactionsInfo>
-    fun listSessions(projectId: ProjectId, eventFilter: EventFilter?): Array<SessionEventsInfo>
-    fun listUsers(projectId: ProjectId, eventFilter: EventFilter?): Array<UserEventsInfo>
+    fun listCountries(
+        projectId: ProjectId,
+        eventFilter: EventFilter?,
+        pagination: Pagination
+    ): Array<WalletConnectionsAndTransactionsInfo>
+
+    fun listBrowsers(
+        projectId: ProjectId,
+        eventFilter: EventFilter?,
+        pagination: Pagination
+    ): Array<WalletConnectionsAndTransactionsInfo>
+
+    fun listSessions(projectId: ProjectId, eventFilter: EventFilter?, pagination: Pagination): Array<SessionEventsInfo>
+    fun listUsers(projectId: ProjectId, eventFilter: EventFilter?, pagination: Pagination): Array<UserEventsInfo>
     fun projectUserStats(projectId: ProjectId, eventFilter: EventFilter?): ProjectUserStats
     fun getUserWalletAndTransactionStats(
         field: EventTrackerModelField,
         projectId: ProjectId,
         from: UtcDateTime?,
         to: UtcDateTime?,
-        eventFilter: EventFilter?
+        eventFilter: EventFilter?,
+        pagination: Pagination
     ): Array<UsersWalletsAndTransactionsInfo>
 }

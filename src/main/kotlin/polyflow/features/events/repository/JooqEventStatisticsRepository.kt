@@ -14,6 +14,7 @@ import polyflow.features.events.model.ScreenState
 import polyflow.features.events.model.params.EventFilter
 import polyflow.features.events.model.params.StatisticsQuery
 import polyflow.features.events.model.request.filter.EventTrackerModelField
+import polyflow.features.events.model.request.filter.Pagination
 import polyflow.features.events.model.response.AverageTimespanValues
 import polyflow.features.events.model.response.IntTimespanValues
 import polyflow.features.events.model.response.IntTimespanWithAverage
@@ -50,20 +51,21 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
     companion object : KLogging()
 
     // TODO improve efficiency
-    override fun totalConnectedWallets(query: StatisticsQuery): Array<IntTimespanValues> {
-        logger.debug { "Find total connected wallets, query: $query" }
+    override fun totalConnectedWallets(query: StatisticsQuery, pagination: Pagination): Array<IntTimespanValues> {
+        logger.debug { "Find total connected wallets, query: $query, pagination: $pagination" }
 
         return fetchUniqueWalletConnectedEvents(query)
             .groupByDuration(
                 from = query.from,
                 granularity = query.granularity,
-                uniqueInRange = false
+                uniqueInRange = false,
+                pagination = pagination
             )
     }
 
     // TODO improve efficiency
-    override fun totalNewWallets(query: StatisticsQuery): Array<IntTimespanValues> {
-        logger.debug { "Find total new wallets, query: $query" }
+    override fun totalNewWallets(query: StatisticsQuery, pagination: Pagination): Array<IntTimespanValues> {
+        logger.debug { "Find total new wallets, query: $query, pagination: $pagination" }
 
         val table = EventTables.WalletConnectedTable
 
@@ -88,13 +90,14 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
             .groupByDuration(
                 from = query.from,
                 granularity = query.granularity,
-                uniqueInRange = false
+                uniqueInRange = false,
+                pagination = pagination
             )
     }
 
     // TODO improve efficiency
-    override fun periodActiveWallets(query: StatisticsQuery): IntTimespanWithAverage {
-        logger.debug { "Find period active wallets, query: $query" }
+    override fun periodActiveWallets(query: StatisticsQuery, pagination: Pagination): IntTimespanWithAverage {
+        logger.debug { "Find period active wallets, query: $query, pagination: $pagination" }
 
         val activeWalletsFromConnectedEvents = EventTables.WalletConnectedTable.fetchWallets(query)
         val activeWalletsFromTxEvents = EventTables.TxRequestTable.fetchWallets(query)
@@ -104,7 +107,8 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
             .groupByDuration(
                 from = query.from,
                 granularity = query.granularity,
-                uniqueInRange = true
+                uniqueInRange = true,
+                pagination = pagination
             )
         val averageValue = if (perPeriodValues.isNotEmpty()) {
             perPeriodValues.sumOf { it.value }.toDouble() / perPeriodValues.size.toDouble()
@@ -117,44 +121,50 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
     }
 
     // TODO improve efficiency
-    override fun totalTransactions(query: StatisticsQuery): Array<IntTimespanValues> {
-        logger.debug { "Find total transactions, query: $query" }
+    override fun totalTransactions(query: StatisticsQuery, pagination: Pagination): Array<IntTimespanValues> {
+        logger.debug { "Find total transactions, query: $query, pagination: $pagination" }
 
         return fetchTransactions(query) { emptyList() }
             .groupByDuration(
                 from = query.from,
                 granularity = query.granularity,
-                uniqueInRange = false
+                uniqueInRange = false,
+                pagination = pagination
             )
     }
 
     // TODO improve efficiency
-    override fun totalSuccessfulTransactions(query: StatisticsQuery): Array<IntTimespanValues> {
-        logger.debug { "Find successful transactions, query: $query" }
+    override fun totalSuccessfulTransactions(query: StatisticsQuery, pagination: Pagination): Array<IntTimespanValues> {
+        logger.debug { "Find successful transactions, query: $query, pagination: $pagination" }
 
         return fetchTransactions(query) { listOf(it.TX.subfield(TxData.TX_DATA.STATUS).eq(TxStatus.SUCCESS)) }
             .groupByDuration(
                 from = query.from,
                 granularity = query.granularity,
-                uniqueInRange = false
+                uniqueInRange = false,
+                pagination = pagination
             )
     }
 
     // TODO improve efficiency
-    override fun totalCancelledTransactions(query: StatisticsQuery): Array<IntTimespanValues> {
-        logger.debug { "Find cancelled transactions, query: $query" }
+    override fun totalCancelledTransactions(query: StatisticsQuery, pagination: Pagination): Array<IntTimespanValues> {
+        logger.debug { "Find cancelled transactions, query: $query, pagination: $pagination" }
 
         return fetchTransactions(query) { listOf(it.TX.subfield(TxData.TX_DATA.STATUS).eq(TxStatus.FAILURE)) }
             .groupByDuration(
                 from = query.from,
                 granularity = query.granularity,
-                uniqueInRange = false
+                uniqueInRange = false,
+                pagination = pagination
             )
     }
 
     // TODO improve efficiency
-    override fun averageTransactionsPerUser(query: StatisticsQuery): Array<AverageTimespanValues> {
-        logger.debug { "Find average transactions per user, query: $query" }
+    override fun averageTransactionsPerUser(
+        query: StatisticsQuery,
+        pagination: Pagination
+    ): Array<AverageTimespanValues> {
+        logger.debug { "Find average transactions per user, query: $query, pagination: $pagination" }
 
         val table = EventTables.TxRequestTable
         val txHashField = table.db.TX.subfield(TxData.TX_DATA.HASH)
@@ -175,19 +185,21 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
             }
             .groupByUserAverageByDuration(
                 from = query.from,
-                granularity = query.granularity
+                granularity = query.granularity,
+                pagination = pagination
             )
     }
 
     // TODO improve efficiency
-    override fun averageTransactions(query: StatisticsQuery): MovingAverageTimespanValues {
-        logger.debug { "Find average transactions, query: $query" }
+    override fun averageTransactions(query: StatisticsQuery, pagination: Pagination): MovingAverageTimespanValues {
+        logger.debug { "Find average transactions, query: $query, pagination: $pagination" }
 
         return fetchTransactions(query) { emptyList() }
             .movingAverage(
                 from = query.from,
                 granularity = query.granularity,
-                uniqueInRange = false
+                uniqueInRange = false,
+                pagination = pagination
             )
     }
 
@@ -199,7 +211,8 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
             .groupByDuration(
                 from = query.from,
                 granularity = query.granularity,
-                uniqueInRange = false
+                uniqueInRange = false,
+                pagination = null
             )
             .minOfOrNull { it.value } ?: 0
     }
@@ -212,7 +225,8 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
             .groupByDuration(
                 from = query.from,
                 granularity = query.granularity,
-                uniqueInRange = false
+                uniqueInRange = false,
+                pagination = null
             )
             .maxOfOrNull { it.value } ?: 0
     }
@@ -220,34 +234,43 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
     // TODO improve efficiency
     override fun listWalletProviders(
         projectId: ProjectId,
-        eventFilter: EventFilter?
+        eventFilter: EventFilter?,
+        pagination: Pagination
     ): Array<WalletConnectionsAndTransactionsInfo> {
-        logger.debug { "List wallet providers, projectId: $projectId, eventFilter: $eventFilter" }
-        return listStats(projectId, { it.walletProvider }, eventFilter)
+        logger.debug {
+            "List wallet providers, projectId: $projectId, eventFilter: $eventFilter, pagination: $pagination"
+        }
+        return listStats(projectId, { it.walletProvider }, eventFilter, pagination)
     }
 
     // TODO improve efficiency
     override fun listCountries(
         projectId: ProjectId,
-        eventFilter: EventFilter?
+        eventFilter: EventFilter?,
+        pagination: Pagination
     ): Array<WalletConnectionsAndTransactionsInfo> {
-        logger.debug { "List countries, projectId: $projectId, eventFilter: $eventFilter" }
-        return listStats(projectId, { it.country }, eventFilter)
+        logger.debug { "List countries, projectId: $projectId, eventFilter: $eventFilter, pagination: $pagination" }
+        return listStats(projectId, { it.country }, eventFilter, pagination)
     }
 
     // TODO improve efficiency
     override fun listBrowsers(
         projectId: ProjectId,
-        eventFilter: EventFilter?
+        eventFilter: EventFilter?,
+        pagination: Pagination
     ): Array<WalletConnectionsAndTransactionsInfo> {
-        logger.debug { "List browsers, projectId: $projectId, eventFilter: $eventFilter" }
-        return listStats(projectId, { it.browser }, eventFilter)
+        logger.debug { "List browsers, projectId: $projectId, eventFilter: $eventFilter, pagination: $pagination" }
+        return listStats(projectId, { it.browser }, eventFilter, pagination)
     }
 
     // TODO improve efficiency
     @Suppress("LongMethod", "ComplexMethod")
-    override fun listSessions(projectId: ProjectId, eventFilter: EventFilter?): Array<SessionEventsInfo> {
-        logger.debug { "List sessions, projectId: $projectId, eventFilter: $eventFilter" }
+    override fun listSessions(
+        projectId: ProjectId,
+        eventFilter: EventFilter?,
+        pagination: Pagination
+    ): Array<SessionEventsInfo> {
+        logger.debug { "List sessions, projectId: $projectId, eventFilter: $eventFilter, pagination: $pagination" }
 
         data class SessionEventInfoCollector(
             val sessionId: String,
@@ -378,14 +401,21 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
             )
         }
 
-        return allCounts.toTypedArray()
+        return allCounts
+            .drop(pagination.offset)
+            .take(pagination.limit)
+            .toTypedArray()
     }
 
     // TODO improve efficiency
     // TODO shares a lot of logic with listSessions
     @Suppress("LongMethod", "ComplexMethod")
-    override fun listUsers(projectId: ProjectId, eventFilter: EventFilter?): Array<UserEventsInfo> {
-        logger.debug { "List users, projectId: $projectId, eventFilter: $eventFilter" }
+    override fun listUsers(
+        projectId: ProjectId,
+        eventFilter: EventFilter?,
+        pagination: Pagination
+    ): Array<UserEventsInfo> {
+        logger.debug { "List users, projectId: $projectId, eventFilter: $eventFilter, pagination: $pagination" }
 
         data class UserEventInfoCollector(
             val userId: String,
@@ -529,7 +559,10 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
             )
         }
 
-        return allCounts.toTypedArray()
+        return allCounts
+            .drop(pagination.offset)
+            .take(pagination.limit)
+            .toTypedArray()
     }
 
     // TODO improve efficiency
@@ -614,11 +647,12 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
         projectId: ProjectId,
         from: UtcDateTime?,
         to: UtcDateTime?,
-        eventFilter: EventFilter?
+        eventFilter: EventFilter?,
+        pagination: Pagination
     ): Array<UsersWalletsAndTransactionsInfo> {
         logger.debug {
             "Get project user, wallet and transaction stats, field: $field, projectId: $projectId," +
-                " from: $from, to: $to, eventFilter: $eventFilter"
+                " from: $from, to: $to, eventFilter: $eventFilter, pagination: $pagination"
         }
 
         data class WalletCount(
@@ -741,13 +775,17 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
             )
         }
 
-        return result.toTypedArray()
+        return result
+            .drop(pagination.offset)
+            .take(pagination.limit)
+            .toTypedArray()
     }
 
     private fun listStats(
         projectId: ProjectId,
         key: (EventTable<*, *>) -> Field<out String?>,
-        eventFilter: EventFilter?
+        eventFilter: EventFilter?,
+        pagination: Pagination
     ): Array<WalletConnectionsAndTransactionsInfo> {
         val walletConnectedKey = key(EventTables.WalletConnectedTable)
         val walletCounts = dslContext.select(
@@ -808,7 +846,10 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
                     uniqueWalletConnections = walletCount?.uniqueWalletConnections ?: 0,
                     executedTransactions = transactionCount?.executedTransactions ?: 0
                 )
-            }.toTypedArray()
+            }
+            .drop(pagination.offset)
+            .take(pagination.limit)
+            .toTypedArray()
     }
 
     private fun fetchTransactions(
@@ -853,7 +894,8 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
 
     private fun List<Pair<Pair<TransactionHash?, String?>, UtcDateTime>>.groupByUserAverageByDuration(
         from: UtcDateTime?,
-        granularity: Duration?
+        granularity: Duration?,
+        pagination: Pagination
     ): Array<AverageTimespanValues> {
         val start = from ?: firstOrNull()?.component2() ?: return emptyArray()
 
@@ -872,13 +914,17 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
                 to = it.key.second.value,
                 averageValue = averagePerUserInRange
             )
-        }.toTypedArray()
+        }
+            .drop(pagination.offset)
+            .take(pagination.limit)
+            .toTypedArray()
     }
 
     private fun <T> List<Pair<T, UtcDateTime>>.groupByDuration(
         from: UtcDateTime?,
         granularity: Duration?,
-        uniqueInRange: Boolean
+        uniqueInRange: Boolean,
+        pagination: Pagination?
     ): Array<IntTimespanValues> {
         val start = from ?: firstOrNull()?.component2() ?: return emptyArray()
 
@@ -888,7 +934,7 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
             is InexactDuration -> groupBy { it.groupByInexactDuration(granularity) }
         }
 
-        return grouping.map {
+        val result = grouping.map {
             val size = if (uniqueInRange) {
                 it.value.distinctBy { v -> v.component1() }.size
             } else it.value.size
@@ -898,7 +944,16 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
                 to = it.key.second.value,
                 value = size
             )
-        }.toTypedArray()
+        }
+
+        return if (pagination != null) {
+            result
+                .drop(pagination.offset)
+                .take(pagination.limit)
+                .toTypedArray()
+        } else {
+            result.toTypedArray()
+        }
     }
 
     private fun <T> Pair<T, UtcDateTime>.groupByExactDuration(
@@ -924,12 +979,14 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
     private fun <T> List<Pair<T, UtcDateTime>>.movingAverage(
         from: UtcDateTime?,
         granularity: Duration?,
-        uniqueInRange: Boolean
+        uniqueInRange: Boolean,
+        pagination: Pagination
     ): MovingAverageTimespanValues {
         val grouped = this.groupByDuration(
             from = from,
             granularity = granularity,
-            uniqueInRange = uniqueInRange
+            uniqueInRange = uniqueInRange,
+            pagination = null
         )
 
         val movingAverages = grouped.fold(mutableListOf<WithCount<IntTimespanValues>>()) { acc, elem ->
@@ -950,7 +1007,7 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
         } else 0.0
 
         return MovingAverageTimespanValues(
-            movingAverages = movingAverages,
+            movingAverages = movingAverages.drop(pagination.offset).take(pagination.limit),
             averageValue = averageValue
         )
     }
