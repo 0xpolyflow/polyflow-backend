@@ -48,7 +48,9 @@ import polyflow.features.events.model.DeviceState as DeviceStateModel
 @Suppress("TooManyFunctions")
 class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventStatisticsRepository { // TODO test
 
-    companion object : KLogging()
+    companion object : KLogging() {
+        private data class TimeRange(val start: UtcDateTime, val end: UtcDateTime, val scale: Int)
+    }
 
     // TODO improve efficiency
     override fun totalConnectedWallets(query: StatisticsQuery, pagination: Pagination): Array<IntTimespanValues> {
@@ -57,6 +59,7 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
         return fetchUniqueWalletConnectedEvents(query)
             .groupByDuration(
                 from = query.from,
+                to = query.to,
                 granularity = query.granularity,
                 uniqueInRange = false,
                 pagination = pagination
@@ -89,6 +92,7 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
             .fetch { Pair(it.component1(), it.component2()) }
             .groupByDuration(
                 from = query.from,
+                to = query.to,
                 granularity = query.granularity,
                 uniqueInRange = false,
                 pagination = pagination
@@ -106,6 +110,7 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
             .sortedBy { it.component2().value }
             .groupByDuration(
                 from = query.from,
+                to = query.to,
                 granularity = query.granularity,
                 uniqueInRange = true,
                 pagination = pagination
@@ -127,6 +132,7 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
         return fetchTransactions(query) { emptyList() }
             .groupByDuration(
                 from = query.from,
+                to = query.to,
                 granularity = query.granularity,
                 uniqueInRange = false,
                 pagination = pagination
@@ -140,6 +146,7 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
         return fetchTransactions(query) { listOf(it.TX.subfield(TxData.TX_DATA.STATUS).eq(TxStatus.SUCCESS)) }
             .groupByDuration(
                 from = query.from,
+                to = query.to,
                 granularity = query.granularity,
                 uniqueInRange = false,
                 pagination = pagination
@@ -153,6 +160,7 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
         return fetchTransactions(query) { listOf(it.TX.subfield(TxData.TX_DATA.STATUS).eq(TxStatus.FAILURE)) }
             .groupByDuration(
                 from = query.from,
+                to = query.to,
                 granularity = query.granularity,
                 uniqueInRange = false,
                 pagination = pagination
@@ -185,6 +193,7 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
             }
             .groupByUserAverageByDuration(
                 from = query.from,
+                to = query.to,
                 granularity = query.granularity,
                 pagination = pagination
             )
@@ -197,6 +206,7 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
         return fetchTransactions(query) { emptyList() }
             .movingAverage(
                 from = query.from,
+                to = query.to,
                 granularity = query.granularity,
                 uniqueInRange = false,
                 pagination = pagination
@@ -210,6 +220,7 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
         return fetchTransactions(query) { emptyList() }
             .groupByDuration(
                 from = query.from,
+                to = query.to,
                 granularity = query.granularity,
                 uniqueInRange = false,
                 pagination = null
@@ -224,6 +235,7 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
         return fetchTransactions(query) { emptyList() }
             .groupByDuration(
                 from = query.from,
+                to = query.to,
                 granularity = query.granularity,
                 uniqueInRange = false,
                 pagination = null
@@ -894,15 +906,19 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
 
     private fun List<Pair<Pair<TransactionHash?, String?>, UtcDateTime>>.groupByUserAverageByDuration(
         from: UtcDateTime?,
+        to: UtcDateTime?,
         granularity: Duration?,
         pagination: Pagination
     ): Array<AverageTimespanValues> {
         val start = from ?: firstOrNull()?.component2() ?: return emptyArray()
+        val end = to ?: lastOrNull()?.component2()
 
         val grouping = when (granularity) {
-            null -> mapOf(Pair(start, last().component2()) to this)
+            null -> mapOf(TimeRange(start, last().component2(), 0) to this)
             is ExactDuration -> groupBy { it.groupByExactDuration(start, granularity) }
-            is InexactDuration -> groupBy { it.groupByInexactDuration(granularity) }
+                .expandExactDuration(start, end, granularity)
+
+            is InexactDuration -> groupBy { it.groupByInexactDuration(granularity) } // TODO expand
         }
 
         return grouping.map {
@@ -910,8 +926,8 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
             val averagePerUserInRange = txPerUserInRange.average().takeIf { n -> n.isNaN().not() } ?: 0.0
 
             AverageTimespanValues(
-                from = it.key.first.value,
-                to = it.key.second.value,
+                from = it.key.start.value,
+                to = it.key.end.value,
                 averageValue = averagePerUserInRange
             )
         }
@@ -922,16 +938,20 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
 
     private fun <T> List<Pair<T, UtcDateTime>>.groupByDuration(
         from: UtcDateTime?,
+        to: UtcDateTime?,
         granularity: Duration?,
         uniqueInRange: Boolean,
         pagination: Pagination?
     ): Array<IntTimespanValues> {
         val start = from ?: firstOrNull()?.component2() ?: return emptyArray()
+        val end = to ?: lastOrNull()?.component2()
 
         val grouping = when (granularity) {
-            null -> mapOf(Pair(start, last().component2()) to this)
+            null -> mapOf(TimeRange(start, last().component2(), 0) to this)
             is ExactDuration -> groupBy { it.groupByExactDuration(start, granularity) }
-            is InexactDuration -> groupBy { it.groupByInexactDuration(granularity) }
+                .expandExactDuration(start, end, granularity)
+
+            is InexactDuration -> groupBy { it.groupByInexactDuration(granularity) } // TODO expand
         }
 
         val result = grouping.map {
@@ -940,8 +960,8 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
             } else it.value.size
 
             IntTimespanValues(
-                from = it.key.first.value,
-                to = it.key.second.value,
+                from = it.key.start.value,
+                to = it.key.end.value,
                 value = size
             )
         }
@@ -959,31 +979,64 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
     private fun <T> Pair<T, UtcDateTime>.groupByExactDuration(
         start: UtcDateTime,
         limit: ExactDuration
-    ): Pair<UtcDateTime, UtcDateTime> {
+    ): TimeRange {
         val diff = this.component2() - start
         val scale = floor(diff / limit).toInt()
-        return Pair(start + limit * scale, start + limit * (scale + 1) - ExactDuration(1.milliseconds))
+        return TimeRange(
+            start = start + limit * scale,
+            end = start + limit * (scale + 1) - ExactDuration(1.milliseconds),
+            scale = scale
+        )
+    }
+
+    private fun <T> Map<TimeRange, List<Pair<T, UtcDateTime>>>.expandExactDuration(
+        start: UtcDateTime,
+        end: UtcDateTime?,
+        limit: ExactDuration
+    ): Map<TimeRange, List<Pair<T, UtcDateTime>>> {
+        val maxDiff = (end ?: UtcDateTime(OffsetDateTime.now())) - start
+        val maxScale = floor(maxDiff / limit).toInt()
+
+        val fullRange = (0..maxScale).associate { scale ->
+            val timeRange = TimeRange(
+                start = start + limit * scale,
+                end = start + limit * (scale + 1) - ExactDuration(1.milliseconds),
+                scale = scale
+            )
+
+            val item = this[timeRange] ?: emptyList()
+
+            Pair(timeRange, item)
+        }
+
+        return fullRange
     }
 
     private fun <T> Pair<T, UtcDateTime>.groupByInexactDuration(
         duration: InexactDuration
-    ): Pair<UtcDateTime, UtcDateTime> {
+    ): TimeRange {
         val time = this.component2()
 
         return when (duration) {
-            MonthlyDuration -> Pair(time.atMonthStart(time.month()), time.atMonthEnd(time.month()))
-            YearlyDuration -> Pair(time.atYearStart(), time.atYearEnd())
+            MonthlyDuration -> TimeRange(
+                time.atMonthStart(time.month()),
+                time.atMonthEnd(time.month()),
+                0
+            ) // TODO scale
+            YearlyDuration -> TimeRange(time.atYearStart(), time.atYearEnd(), 0) // TODO scale
         }
     }
 
     private fun <T> List<Pair<T, UtcDateTime>>.movingAverage(
         from: UtcDateTime?,
+        to: UtcDateTime?,
         granularity: Duration?,
         uniqueInRange: Boolean,
         pagination: Pagination
     ): MovingAverageTimespanValues {
         val grouped = this.groupByDuration(
             from = from,
+            to = to,
             granularity = granularity,
             uniqueInRange = uniqueInRange,
             pagination = null
