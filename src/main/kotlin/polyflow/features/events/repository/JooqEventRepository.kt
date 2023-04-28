@@ -175,7 +175,8 @@ class JooqEventRepository(private val dslContext: DSLContext) : EventRepository 
                 utmContent = fetchedValues.forField(EventTrackerModelField.UTM_CONTENT),
                 utmTerm = fetchedValues.forField(EventTrackerModelField.UTM_TERM),
                 origin = fetchedValues.forField(EventTrackerModelField.ORIGIN),
-                path = fetchedValues.forField(EventTrackerModelField.PATH)
+                path = fetchedValues.forField(EventTrackerModelField.PATH),
+                query = fetchedValues.forField(EventTrackerModelField.QUERY)
             ),
             device = DeviceStateUniqueValues(
                 os = fetchedValues.forField(DeviceStateField.OS),
@@ -371,7 +372,8 @@ private fun EventTrackerModel.toRecord() =
         utmContent = utmContent,
         utmTerm = utmTerm,
         origin = origin,
-        path = path
+        path = path,
+        queryParams = query
     )
 
 private fun EventTrackerModelRecord.toModel() =
@@ -385,7 +387,8 @@ private fun EventTrackerModelRecord.toModel() =
         utmContent = utmContent,
         utmTerm = utmTerm,
         origin = origin,
-        path = path
+        path = path,
+        query = queryParams
     )
 
 private fun WalletState.toRecord() =

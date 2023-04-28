@@ -9,5 +9,6 @@ data class EventTrackerModelUniqueValues(
     val utmContent: Array<String>?,
     val utmTerm: Array<String>?,
     val origin: Array<String>?,
-    val path: Array<String>?
+    val path: Array<String>?,
+    val query: Array<String>?
 )

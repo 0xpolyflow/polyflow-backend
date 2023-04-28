@@ -45,4 +45,5 @@ interface EventTable<R : Record, T : TableImpl<R>> {
     val utmTerm: Field<String?>
     val origin: Field<String?>
     val path: Field<String?>
+    val query: Field<String?>
 }

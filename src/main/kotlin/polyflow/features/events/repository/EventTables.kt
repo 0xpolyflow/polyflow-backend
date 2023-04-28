@@ -63,6 +63,7 @@ object EventTables {
         override val utmTerm = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.UTM_TERM)
         override val origin = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.ORIGIN)
         override val path = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.PATH)
+        override val query = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.QUERY_PARAMS)
     }
 
     object TxRequestTable : EventTable<TxRequestEventRecord, TxRequestEventTable> {
@@ -99,6 +100,7 @@ object EventTables {
         override val utmTerm = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.UTM_TERM)
         override val origin = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.ORIGIN)
         override val path = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.PATH)
+        override val query = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.QUERY_PARAMS)
     }
 
     object BlockchainErrorTable : EventTable<BlockchainErrorEventRecord, BlockchainErrorEventTable> {
@@ -132,6 +134,7 @@ object EventTables {
         override val utmTerm = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.UTM_TERM)
         override val origin = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.ORIGIN)
         override val path = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.PATH)
+        override val query = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.QUERY_PARAMS)
     }
 
     object ErrorTable : EventTable<ErrorEventRecord, ErrorEventTable> {
@@ -165,6 +168,7 @@ object EventTables {
         override val utmTerm = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.UTM_TERM)
         override val origin = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.ORIGIN)
         override val path = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.PATH)
+        override val query = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.QUERY_PARAMS)
     }
 
     object UserLandedTable : EventTable<UserLandedEventRecord, UserLandedEventTable> {
@@ -198,5 +202,6 @@ object EventTables {
         override val utmTerm = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.UTM_TERM)
         override val origin = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.ORIGIN)
         override val path = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.PATH)
+        override val query = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.QUERY_PARAMS)
     }
 }

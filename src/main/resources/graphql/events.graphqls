@@ -78,6 +78,7 @@ type EventTrackerModel {
     utmTerm: String
     origin: String
     path: String
+    query: String
 }
 
 input EventTrackerModelInput {
@@ -91,6 +92,7 @@ input EventTrackerModelInput {
     utmTerm: String
     origin: String
     path: String
+    query: String
 }
 
 input EventTrackerModelFilter {
@@ -104,6 +106,7 @@ input EventTrackerModelFilter {
     utmTerm: String
     origin: String
     path: String
+    query: String
 }
 
 enum EventTrackerModelField {
@@ -115,7 +118,8 @@ enum EventTrackerModelField {
     UTM_CONTENT,
     UTM_TERM,
     ORIGIN,
-    PATH
+    PATH,
+    QUERY
 }
 
 type EventTrackerModelUniqueValues {
@@ -128,6 +132,7 @@ type EventTrackerModelUniqueValues {
     utmTerm: [String!]
     origin: [String!]
     path: [String!]
+    query: [String!]
 }
 
 ## NetworkState

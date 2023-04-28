@@ -35,5 +35,8 @@ data class EventTrackerModel(
     val origin: String?,
 
     @field:MaxStringSize
-    val path: String?
+    val path: String?,
+
+    @field:MaxStringSize
+    val query: String?
 )
