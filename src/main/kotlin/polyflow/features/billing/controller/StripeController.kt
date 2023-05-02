@@ -82,14 +82,7 @@ class StripeController(
     fun createPortalSession(
         @UserBinding user: User
     ): ResponseEntity<String> {
-        if (user.stripeSessionId == null) {
-            throw StripeSessionIdMissing()
-        }
-
-        val checkoutSession = CheckoutSession.retrieve(user.stripeSessionId)
-        val customerId = checkoutSession.customer
-
-        userRepository.setStripeCustomerId(user.id, customerId)
+        val customerId = user.resolveStripeCustomerId()
 
         val params = PortalSessionCreateParams.Builder().apply {
             setReturnUrl(stripeProperties.redirectDomain)
@@ -150,6 +143,20 @@ class StripeController(
             }
         }
     }
+
+    private fun User.resolveStripeCustomerId(): String =
+        this.stripeCustomerId ?: run {
+            if (this.stripeSessionId == null) {
+                throw StripeSessionIdMissing()
+            }
+
+            val checkoutSession = CheckoutSession.retrieve(this.stripeSessionId)
+            val customerId = checkoutSession.customer
+
+            userRepository.setStripeCustomerId(this.id, customerId)
+
+            customerId
+        }
 
     private fun StripeObject.asSubscription(): Subscription = this as? Subscription ?: throw WebhookException()
 
