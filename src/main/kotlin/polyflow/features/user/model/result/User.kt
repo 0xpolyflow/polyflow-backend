@@ -12,6 +12,7 @@ data class User(
     val registeredAt: UtcDateTime,
     val verifiedAt: UtcDateTime?,
     val stripeCustomerId: String?,
+    val stripeSessionId: String?,
     val totalDomainLimit: Int,
     val totalSeatLimit: Int
 )

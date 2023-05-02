@@ -31,6 +31,7 @@ class JooqUserRepository(private val dslContext: DSLContext) : UserRepository { 
             registeredAt = params.registeredAt,
             verifiedAt = null,
             stripeCustomerId = null,
+            stripeSessionId = null,
             totalDomainLimit = 0,
             totalSeatLimit = 0
         )
@@ -94,6 +95,22 @@ class JooqUserRepository(private val dslContext: DSLContext) : UserRepository { 
             .execute()
     }
 
+    override fun setStripeSessionId(userId: UserId, stripeSessionId: String) {
+        logger.info { "Set stripe session for userId: $userId, stripeSessionId: $stripeSessionId" }
+        dslContext.update(UserTable)
+            .set(UserTable.STRIPE_SESSION_ID, stripeSessionId)
+            .where(UserTable.ID.eq(userId))
+            .execute()
+    }
+
+    override fun clearStripeSessionId(userId: UserId) {
+        logger.info { "Clear stripe session for userId: $userId" }
+        dslContext.update(UserTable)
+            .setNull(UserTable.STRIPE_SESSION_ID)
+            .where(UserTable.ID.eq(userId))
+            .execute()
+    }
+
     override fun updateAccountLimits(userId: UserId, domainLimit: Int, seatLimit: Int) {
         logger.info { "Update account limits for userId: $userId, domainLimit: $domainLimit, seatLimit: $seatLimit" }
         dslContext.update(UserTable)
@@ -140,6 +157,7 @@ class JooqUserRepository(private val dslContext: DSLContext) : UserRepository { 
             registeredAt = registeredAt,
             verifiedAt = verifiedAt,
             stripeCustomerId = stripeCustomerId,
+            stripeSessionId = stripeSessionId,
             totalDomainLimit = totalDomainLimit,
             totalSeatLimit = totalSeatLimit
         )

@@ -106,10 +106,20 @@ class InvalidUserSecureTokenException : ServiceException(
 class StripeCustomerIdMissing : ServiceException(
     errorCode = ErrorCode.STRIPE_CUSTOMER_ID_MISSING,
     httpStatus = HttpStatus.BAD_REQUEST,
-    message = "Stripe customer ID is missing - create Stripe session first"
+    message = "Stripe customer ID is missing"
 ) {
     companion object {
         private const val serialVersionUID: Long = 3068323805695731551L
+    }
+}
+
+class StripeSessionIdMissing : ServiceException(
+    errorCode = ErrorCode.STRIPE_SESSION_ID_MISSING,
+    httpStatus = HttpStatus.BAD_REQUEST,
+    message = "Stripe session ID is missing"
+) {
+    companion object {
+        private const val serialVersionUID: Long = -9069579216562729486L
     }
 }
 

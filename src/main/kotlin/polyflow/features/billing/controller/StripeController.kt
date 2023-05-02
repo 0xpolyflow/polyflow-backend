@@ -1,6 +1,7 @@
 package polyflow.features.billing.controller
 
 import com.stripe.exception.SignatureVerificationException
+import com.stripe.model.Customer
 import com.stripe.model.Price
 import com.stripe.model.Product
 import com.stripe.model.StripeObject
@@ -8,8 +9,9 @@ import com.stripe.model.Subscription
 import com.stripe.net.Webhook
 import com.stripe.param.PriceListParams
 import com.stripe.param.checkout.SessionCreateParams.LineItem
+import com.stripe.param.checkout.SessionCreateParams.SubscriptionData
 import mu.KLogging
-import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -18,12 +20,11 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import polyflow.config.StripeProperties
 import polyflow.config.binding.annotation.UserBinding
-import polyflow.exception.StripeCustomerIdMissing
+import polyflow.exception.StripeSessionIdMissing
 import polyflow.exception.WebhookException
 import polyflow.features.user.model.result.User
 import polyflow.features.user.repository.UserRepository
 import polyflow.generated.jooq.id.UserId
-import java.net.URI
 import com.stripe.model.billingportal.Session as BillingSession
 import com.stripe.model.checkout.Session as CheckoutSession
 import com.stripe.param.billingportal.SessionCreateParams as PortalSessionCreateParams
@@ -47,48 +48,61 @@ class StripeController(
     fun createCheckoutSession(
         @UserBinding user: User,
         @RequestParam("lookup_key") lookupKey: String
-    ): ResponseEntity<Void> {
+    ): ResponseEntity<String> {
         val priceParams = PriceListParams.builder().apply {
             addLookupKeys(lookupKey)
         }.build()
 
         val prices = Price.list(priceParams)
         val params = CheckoutSessionCreateParams.builder().apply {
-            user.stripeCustomerId?.let { setCustomer(it) }
-
             addLineItem(LineItem.builder().setPrice(prices.data[0].id).setQuantity(1L).build())
+            setCustomerEmail(user.email)
             setMode(CheckoutSessionCreateParams.Mode.SUBSCRIPTION)
             setSuccessUrl(stripeProperties.redirectDomain + "/payments/success")
             setCancelUrl(stripeProperties.redirectDomain + "/payments/cancel")
+            setSubscriptionData(
+                SubscriptionData.builder()
+                    .setTrialPeriodDays(30L)
+                    .build()
+            )
+            setAllowPromotionCodes(true)
+            setPaymentMethodCollection(CheckoutSessionCreateParams.PaymentMethodCollection.ALWAYS)
         }.build()
 
         val session = CheckoutSession.create(params)
 
-        userRepository.setStripeCustomerId(user.id, session.customer)
+        userRepository.setStripeSessionId(user.id, session.id)
 
-        return ResponseEntity.status(HttpStatus.SEE_OTHER)
-            .location(URI.create(session.url))
-            .build()
+        return ResponseEntity.ok()
+            .contentType(MediaType.TEXT_PLAIN)
+            .body(session.url)
     }
 
     @PostMapping("/v1/stripe/create-portal-session")
     fun createPortalSession(
         @UserBinding user: User
-    ): ResponseEntity<Void> {
-        if (user.stripeCustomerId == null) {
-            throw StripeCustomerIdMissing()
+    ): ResponseEntity<String> {
+        if (user.stripeSessionId == null) {
+            throw StripeSessionIdMissing()
         }
+
+        val checkoutSession = CheckoutSession.retrieve(user.stripeSessionId)
+        val customerId = checkoutSession.customer
+
+        userRepository.setStripeCustomerId(user.id, customerId)
 
         val params = PortalSessionCreateParams.Builder().apply {
             setReturnUrl(stripeProperties.redirectDomain)
-            setCustomer(user.stripeCustomerId)
+            setCustomer(customerId)
         }.build()
 
-        val session = BillingSession.create(params)
+        val billingSession = BillingSession.create(params)
 
-        return ResponseEntity.status(HttpStatus.SEE_OTHER)
-            .location(URI.create(session.url))
-            .build()
+        userRepository.clearStripeSessionId(user.id)
+
+        return ResponseEntity.ok()
+            .contentType(MediaType.TEXT_PLAIN)
+            .body(billingSession.url)
     }
 
     @PostMapping("/v1/stripe/webhook")
@@ -139,7 +153,13 @@ class StripeController(
 
     private fun StripeObject.asSubscription(): Subscription = this as? Subscription ?: throw WebhookException()
 
-    private fun Subscription.userId(): UserId? = userRepository.getByStripeCustomerId(this.customer)?.id
+    private fun Subscription.userId(): UserId? =
+        userRepository.getByStripeCustomerId(this.customer)?.id
+            ?: Customer.retrieve(this.customer)?.email?.let(userRepository::getByEmail)?.id
+            ?: run {
+                logger.warn { "No user found for Stripe customer id (or email): ${this.customer}" }
+                null
+            }
 
     private fun Subscription.limits(): Limits =
         this.items.data.getOrNull(0)?.let { data ->

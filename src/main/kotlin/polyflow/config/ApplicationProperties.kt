@@ -64,3 +64,9 @@ data class StripeProperties(
     val endpointSecret: String,
     val redirectDomain: String
 )
+
+@ConstructorBinding
+@ConfigurationProperties("polyflow.mail")
+data class PolyflowMailProperties(
+    val from: String
+)

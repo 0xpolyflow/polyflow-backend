@@ -13,6 +13,8 @@ interface UserRepository {
     fun setVerifiedAt(userId: UserId, verifiedAt: UtcDateTime)
     fun setPassword(userId: UserId, passwordHash: String)
     fun setStripeCustomerId(userId: UserId, stripeCustomerId: String)
+    fun setStripeSessionId(userId: UserId, stripeSessionId: String)
+    fun clearStripeSessionId(userId: UserId)
     fun updateAccountLimits(userId: UserId, domainLimit: Int, seatLimit: Int)
     fun getUsedDomainsById(userId: UserId): Int
     fun getUsedSeatsById(userId: UserId): Int
