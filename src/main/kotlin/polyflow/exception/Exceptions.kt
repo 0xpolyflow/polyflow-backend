@@ -103,23 +103,24 @@ class InvalidUserSecureTokenException : ServiceException(
     }
 }
 
-class StripeCustomerIdMissing : ServiceException(
-    errorCode = ErrorCode.STRIPE_CUSTOMER_ID_MISSING,
-    httpStatus = HttpStatus.BAD_REQUEST,
-    message = "Stripe customer ID is missing"
-) {
-    companion object {
-        private const val serialVersionUID: Long = 3068323805695731551L
-    }
-}
-
-class StripeSessionIdMissing : ServiceException(
+class StripeSessionIdMissingException : ServiceException(
     errorCode = ErrorCode.STRIPE_SESSION_ID_MISSING,
     httpStatus = HttpStatus.BAD_REQUEST,
     message = "Stripe session ID is missing"
 ) {
     companion object {
         private const val serialVersionUID: Long = -9069579216562729486L
+    }
+}
+
+class PriceObjectNotFoundException(lookupKey: String) : ServiceException(
+    errorCode = ErrorCode.RESOURCE_NOT_FOUND,
+    httpStatus = HttpStatus.NOT_FOUND,
+    message = "Price object not found for lookup key: $lookupKey;" +
+        " make sure that price is correctly set-up on Stripe account"
+) {
+    companion object {
+        private const val serialVersionUID: Long = -4960180128519512419L
     }
 }
 

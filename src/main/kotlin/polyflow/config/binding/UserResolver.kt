@@ -1,5 +1,6 @@
 package polyflow.config.binding
 
+import mu.KLogging
 import org.springframework.core.MethodParameter
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.support.WebDataBinderFactory
@@ -22,6 +23,8 @@ class UserResolver(
     private val userRepository: UserRepository
 ) : HandlerMethodArgumentResolver {
 
+    companion object : KLogging()
+
     override fun supportsParameter(parameter: MethodParameter): Boolean {
         return parameter.parameterType == User::class.java &&
             parameter.hasParameterAnnotation(UserBinding::class.java)
@@ -33,20 +36,30 @@ class UserResolver(
         nativeWebRequest: NativeWebRequest,
         binderFactory: WebDataBinderFactory?
     ): User {
+        val requiresActiveSubscription = parameter.hasParameterAnnotation(ActiveSubscription::class.java)
+        val isDomainLimited = parameter.hasParameterAnnotation(DomainLimited::class.java)
+        val isSeatLimited = parameter.hasParameterAnnotation(SeatLimited::class.java)
+
+        logger.info {
+            "Intercepted method call to resolve user, method: ${parameter.method?.name}" +
+                " in class: ${parameter.containingClass.name}, requiresActiveSubscription:" +
+                " $requiresActiveSubscription, isDomainLimited: $isDomainLimited, isSeatLimited: $isSeatLimited"
+        }
+
         val userId = (SecurityContextHolder.getContext().authentication?.principal as? UserId)
             ?: throw BadAuthenticationException()
 
         val user = userRepository.getById(userId) ?: throw NonExistentUserException()
 
-        if (parameter.hasParameterAnnotation(ActiveSubscription::class.java) && user.hasNoActiveSubscription()) {
+        if (requiresActiveSubscription && user.hasNoActiveSubscription()) {
             throw NoActiveSubscriptionException()
         }
 
-        if (parameter.hasParameterAnnotation(DomainLimited::class.java) && user.allDomainsUsed()) {
+        if (isDomainLimited && user.allDomainsUsed()) {
             throw UsageLimitExceededException("number of domains")
         }
 
-        if (parameter.hasParameterAnnotation(SeatLimited::class.java) && user.allSeatsUsed()) {
+        if (isSeatLimited && user.allSeatsUsed()) {
             throw UsageLimitExceededException("number of seats")
         }
 

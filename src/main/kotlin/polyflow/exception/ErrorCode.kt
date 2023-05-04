@@ -32,9 +32,6 @@ enum class ErrorCode(val graphQlErrorType: ErrorType) {
     @Description("Indicates that user account has not yet been verified")
     USER_NOT_YET_VERIFIED(ErrorType.FORBIDDEN),
 
-    @Description("Indicates that Stripe customer ID is not yet set")
-    STRIPE_CUSTOMER_ID_MISSING(ErrorType.BAD_REQUEST),
-
     @Description("Indicates that Stripe session ID is not yet set; create Stripe session to resolve this")
     STRIPE_SESSION_ID_MISSING(ErrorType.BAD_REQUEST),
 

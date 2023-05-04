@@ -20,7 +20,8 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import polyflow.config.StripeProperties
 import polyflow.config.binding.annotation.UserBinding
-import polyflow.exception.StripeSessionIdMissing
+import polyflow.exception.PriceObjectNotFoundException
+import polyflow.exception.StripeSessionIdMissingException
 import polyflow.exception.WebhookException
 import polyflow.features.user.model.result.User
 import polyflow.features.user.repository.UserRepository
@@ -54,8 +55,10 @@ class StripeController(
         }.build()
 
         val prices = Price.list(priceParams)
+        val priceId = prices.data.getOrNull(0)?.id ?: throw PriceObjectNotFoundException(lookupKey)
+
         val params = CheckoutSessionCreateParams.builder().apply {
-            addLineItem(LineItem.builder().setPrice(prices.data[0].id).setQuantity(1L).build())
+            addLineItem(LineItem.builder().setPrice(priceId).setQuantity(1L).build())
             setCustomerEmail(user.email)
             setMode(CheckoutSessionCreateParams.Mode.SUBSCRIPTION)
             setSuccessUrl(stripeProperties.redirectDomain + "/payments/success")
@@ -147,7 +150,7 @@ class StripeController(
     private fun User.resolveStripeCustomerId(): String =
         this.stripeCustomerId ?: run {
             if (this.stripeSessionId == null) {
-                throw StripeSessionIdMissing()
+                throw StripeSessionIdMissingException()
             }
 
             val checkoutSession = CheckoutSession.retrieve(this.stripeSessionId)
