@@ -1,13 +1,13 @@
 package polyflow.features.billing.controller
 
 import com.stripe.exception.SignatureVerificationException
+import com.stripe.exception.StripeException
 import com.stripe.model.Customer
 import com.stripe.model.Price
 import com.stripe.model.Product
 import com.stripe.model.StripeObject
 import com.stripe.model.Subscription
 import com.stripe.net.Webhook
-import com.stripe.param.PriceListParams
 import com.stripe.param.checkout.SessionCreateParams.LineItem
 import com.stripe.param.checkout.SessionCreateParams.SubscriptionData
 import mu.KLogging
@@ -48,17 +48,16 @@ class StripeController(
     @PostMapping("/v1/stripe/create-checkout-session")
     fun createCheckoutSession(
         @UserBinding user: User,
-        @RequestParam("lookup_key") lookupKey: String
+        @RequestParam("price_id") priceId: String
     ): ResponseEntity<String> {
-        val priceParams = PriceListParams.builder().apply {
-            addLookupKeys(lookupKey)
-        }.build()
-
-        val prices = Price.list(priceParams)
-        val priceId = prices.data.getOrNull(0)?.id ?: throw PriceObjectNotFoundException(lookupKey)
+        val price = try {
+            Price.retrieve(priceId)
+        } catch (se: StripeException) {
+            throw PriceObjectNotFoundException(priceId)
+        }
 
         val params = CheckoutSessionCreateParams.builder().apply {
-            addLineItem(LineItem.builder().setPrice(priceId).setQuantity(1L).build())
+            addLineItem(LineItem.builder().setPrice(price.id).setQuantity(1L).build())
             setCustomerEmail(user.email)
             setMode(CheckoutSessionCreateParams.Mode.SUBSCRIPTION)
             setSuccessUrl(stripeProperties.redirectDomain + "/payments/success")

@@ -113,10 +113,10 @@ class StripeSessionIdMissingException : ServiceException(
     }
 }
 
-class PriceObjectNotFoundException(lookupKey: String) : ServiceException(
+class PriceObjectNotFoundException(priceId: String) : ServiceException(
     errorCode = ErrorCode.RESOURCE_NOT_FOUND,
     httpStatus = HttpStatus.NOT_FOUND,
-    message = "Price object not found for lookup key: $lookupKey;" +
+    message = "Price object not found for price ID: $priceId;" +
         " make sure that price is correctly set-up on Stripe account"
 ) {
     companion object {

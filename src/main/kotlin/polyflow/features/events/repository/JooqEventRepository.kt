@@ -87,6 +87,23 @@ class JooqEventRepository(private val dslContext: DSLContext) : EventRepository 
     ): List<EventResponse> {
         logger.info { "Find events for projectId: $projectId, from: $from, to: $to, utmFilter: $eventFilter" }
 
+        fun <R : Record, T : TableImpl<R>> EventTable<R, T>.findEventsQuery(
+            projectId: ProjectId,
+            from: UtcDateTime?,
+            to: UtcDateTime?,
+            eventFilter: EventFilter?
+        ): SelectConditionStep<R> {
+            val conditions = listOfNotNull(
+                this.projectId.eq(projectId),
+                from?.let { this.createdAt.le(it) },
+                to?.let { this.createdAt.ge(it) },
+                eventFilter?.createCondition(this)
+            )
+
+            return dslContext.selectFrom(this.db)
+                .where(DSL.and(conditions))
+        }
+
         val walletConnectedEvents = EventTables.WalletConnectedTable.findEventsQuery(
             projectId = projectId,
             from = from,
@@ -341,23 +358,6 @@ class JooqEventRepository(private val dslContext: DSLContext) : EventRepository 
             )
             .returning()
             .fetchOne { it.toModel() }
-    }
-
-    private fun <R : Record, T : TableImpl<R>> EventTable<R, T>.findEventsQuery(
-        projectId: ProjectId,
-        from: UtcDateTime?,
-        to: UtcDateTime?,
-        eventFilter: EventFilter?
-    ): SelectConditionStep<R> {
-        val conditions = listOfNotNull(
-            this.projectId.eq(projectId),
-            from?.let { this.createdAt.le(it) },
-            to?.let { this.createdAt.ge(it) },
-            eventFilter?.createCondition(this)
-        )
-
-        return dslContext.selectFrom(this.db)
-            .where(DSL.and(conditions))
     }
 }
 
