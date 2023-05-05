@@ -5,9 +5,11 @@ import com.stripe.exception.StripeException
 import com.stripe.model.Customer
 import com.stripe.model.Price
 import com.stripe.model.Product
+import com.stripe.model.PromotionCode
 import com.stripe.model.StripeObject
 import com.stripe.model.Subscription
 import com.stripe.net.Webhook
+import com.stripe.param.PromotionCodeListParams
 import com.stripe.param.checkout.SessionCreateParams.LineItem
 import com.stripe.param.checkout.SessionCreateParams.SubscriptionData
 import mu.KLogging
@@ -48,13 +50,16 @@ class StripeController(
     @PostMapping("/v1/stripe/create-checkout-session")
     fun createCheckoutSession(
         @UserBinding user: User,
-        @RequestParam("price_id") priceId: String
+        @RequestParam("price_id", required = true) priceId: String,
+        @RequestParam("promo_code", required = false) promoCode: String?
     ): ResponseEntity<String> {
         val price = try {
             Price.retrieve(priceId)
         } catch (se: StripeException) {
             throw PriceObjectNotFoundException(priceId)
         }
+
+        val coupon = (promoCode ?: stripeProperties.promoCode)?.retrieveCoupon()
 
         val params = CheckoutSessionCreateParams.builder().apply {
             addLineItem(LineItem.builder().setPrice(price.id).setQuantity(1L).build())
@@ -69,6 +74,14 @@ class StripeController(
             )
             setAllowPromotionCodes(true)
             setPaymentMethodCollection(CheckoutSessionCreateParams.PaymentMethodCollection.ALWAYS)
+
+            coupon?.let {
+                addDiscount(
+                    CheckoutSessionCreateParams.Discount.builder()
+                        .setCoupon(it)
+                        .build()
+                )
+            }
         }.build()
 
         val session = CheckoutSession.create(params)
@@ -145,6 +158,15 @@ class StripeController(
             }
         }
     }
+
+    private fun String.retrieveCoupon(): String? =
+        if (this.startsWith("promo_")) {
+            PromotionCode.retrieve(this)?.coupon?.id
+        } else {
+            PromotionCode.list(
+                PromotionCodeListParams.builder().setCode(this).build()
+            )?.data?.getOrNull(0)?.coupon?.id
+        }
 
     private fun User.resolveStripeCustomerId(): String =
         this.stripeCustomerId ?: run {

@@ -62,7 +62,8 @@ data class EmailProperties(
 data class StripeProperties(
     val apiKey: String,
     val endpointSecret: String,
-    val redirectDomain: String
+    val redirectDomain: String,
+    val promoCode: String?
 )
 
 @ConstructorBinding
