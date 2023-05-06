@@ -72,15 +72,16 @@ class StripeController(
                     .setTrialPeriodDays(30L)
                     .build()
             )
-            setAllowPromotionCodes(true)
             setPaymentMethodCollection(CheckoutSessionCreateParams.PaymentMethodCollection.ALWAYS)
 
-            coupon?.let {
+            if (coupon != null) {
                 addDiscount(
                     CheckoutSessionCreateParams.Discount.builder()
-                        .setCoupon(it)
+                        .setCoupon(coupon)
                         .build()
                 )
+            } else {
+                setAllowPromotionCodes(true)
             }
         }.build()
 
