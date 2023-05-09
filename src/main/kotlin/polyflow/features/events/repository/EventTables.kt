@@ -17,6 +17,7 @@ import polyflow.generated.jooq.tables.records.UserLandedEventRecord
 import polyflow.generated.jooq.tables.records.WalletConnectedEventRecord
 import polyflow.generated.jooq.udt.DeviceState
 import polyflow.generated.jooq.udt.EventTrackerModel
+import polyflow.generated.jooq.udt.NetworkState
 import polyflow.generated.jooq.udt.TxData
 import polyflow.generated.jooq.udt.WalletState
 
@@ -64,6 +65,10 @@ object EventTables {
         override val origin = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.ORIGIN)
         override val path = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.PATH)
         override val query = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.QUERY_PARAMS)
+
+        override val chainId = network.subfield(NetworkState.NETWORK_STATE.CHAIN_ID)
+        override val gasPrice = network.subfield(NetworkState.NETWORK_STATE.GAS_PRICE)
+        override val blockHeight = network.subfield(NetworkState.NETWORK_STATE.BLOCK_HEIGHT)
     }
 
     object TxRequestTable : EventTable<TxRequestEventRecord, TxRequestEventTable> {
@@ -101,6 +106,10 @@ object EventTables {
         override val origin = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.ORIGIN)
         override val path = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.PATH)
         override val query = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.QUERY_PARAMS)
+
+        override val chainId = network.subfield(NetworkState.NETWORK_STATE.CHAIN_ID)
+        override val gasPrice = network.subfield(NetworkState.NETWORK_STATE.GAS_PRICE)
+        override val blockHeight = network.subfield(NetworkState.NETWORK_STATE.BLOCK_HEIGHT)
     }
 
     object BlockchainErrorTable : EventTable<BlockchainErrorEventRecord, BlockchainErrorEventTable> {
@@ -135,6 +144,10 @@ object EventTables {
         override val origin = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.ORIGIN)
         override val path = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.PATH)
         override val query = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.QUERY_PARAMS)
+
+        override val chainId = network.subfield(NetworkState.NETWORK_STATE.CHAIN_ID)
+        override val gasPrice = network.subfield(NetworkState.NETWORK_STATE.GAS_PRICE)
+        override val blockHeight = network.subfield(NetworkState.NETWORK_STATE.BLOCK_HEIGHT)
     }
 
     object ErrorTable : EventTable<ErrorEventRecord, ErrorEventTable> {
@@ -169,6 +182,10 @@ object EventTables {
         override val origin = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.ORIGIN)
         override val path = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.PATH)
         override val query = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.QUERY_PARAMS)
+
+        override val chainId = network.subfield(NetworkState.NETWORK_STATE.CHAIN_ID)
+        override val gasPrice = network.subfield(NetworkState.NETWORK_STATE.GAS_PRICE)
+        override val blockHeight = network.subfield(NetworkState.NETWORK_STATE.BLOCK_HEIGHT)
     }
 
     object UserLandedTable : EventTable<UserLandedEventRecord, UserLandedEventTable> {
@@ -203,5 +220,9 @@ object EventTables {
         override val origin = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.ORIGIN)
         override val path = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.PATH)
         override val query = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.QUERY_PARAMS)
+
+        override val chainId = network.subfield(NetworkState.NETWORK_STATE.CHAIN_ID)
+        override val gasPrice = network.subfield(NetworkState.NETWORK_STATE.GAS_PRICE)
+        override val blockHeight = network.subfield(NetworkState.NETWORK_STATE.BLOCK_HEIGHT)
     }
 }

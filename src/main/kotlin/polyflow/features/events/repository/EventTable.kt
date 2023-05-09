@@ -10,8 +10,10 @@ import polyflow.generated.jooq.udt.records.EventTrackerModelRecord
 import polyflow.generated.jooq.udt.records.NetworkStateRecord
 import polyflow.generated.jooq.udt.records.ScreenStateRecord
 import polyflow.generated.jooq.udt.records.WalletStateRecord
+import polyflow.util.ChainId
 import polyflow.util.UtcDateTime
 import polyflow.util.WalletAddress
+import java.math.BigInteger
 import java.util.UUID
 
 interface EventTable<R : Record, T : TableImpl<R>> {
@@ -46,4 +48,8 @@ interface EventTable<R : Record, T : TableImpl<R>> {
     val origin: Field<String?>
     val path: Field<String?>
     val query: Field<String?>
+
+    val chainId: Field<ChainId?>
+    val gasPrice: Field<BigInteger?>
+    val blockHeight: Field<BigInteger?>
 }

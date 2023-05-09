@@ -14,9 +14,11 @@ import polyflow.features.events.model.request.UserLandedEventRequest
 import polyflow.features.events.model.request.WalletConnectedEventRequest
 import polyflow.features.events.model.request.filter.DeviceStateField
 import polyflow.features.events.model.request.filter.EventTrackerModelField
+import polyflow.features.events.model.request.filter.NetworkStateField
 import polyflow.features.events.model.request.filter.Pagination
 import polyflow.features.events.model.response.BlockchainErrorEvent
 import polyflow.features.events.model.response.ErrorEvent
+import polyflow.features.events.model.response.EventCounts
 import polyflow.features.events.model.response.EventResponse
 import polyflow.features.events.model.response.TxRequestEvent
 import polyflow.features.events.model.response.UniqueValues
@@ -69,8 +71,8 @@ class EventGraphQlController(
 
     @QueryMapping
     fun findUniqueValues(
-        @Argument eventTrackerFields: Array<EventTrackerModelField>,
-        @Argument deviceStateFields: Array<DeviceStateField>,
+        @Argument eventTrackerFields: List<EventTrackerModelField>,
+        @Argument deviceStateFields: List<DeviceStateField>,
         @Argument projectId: UUID,
         @Argument from: OffsetDateTime?,
         @Argument to: OffsetDateTime?,
@@ -80,6 +82,29 @@ class EventGraphQlController(
         val user = Util.resolveUser(userRepository)
         return eventService.findUniqueValues(
             fields = eventTrackerFields.toSet() + deviceStateFields.toSet(),
+            userId = user.id,
+            projectId = ProjectId(projectId),
+            from = from?.let(UtcDateTime::invoke),
+            to = to?.let(UtcDateTime::invoke),
+            eventFilter = filter,
+            pagination = pagination
+        )
+    }
+
+    @QueryMapping
+    fun findEventCounts(
+        @Argument eventTrackerFields: List<EventTrackerModelField>,
+        @Argument deviceStateFields: List<DeviceStateField>,
+        @Argument networkStateFields: List<NetworkStateField>,
+        @Argument projectId: UUID,
+        @Argument from: OffsetDateTime?,
+        @Argument to: OffsetDateTime?,
+        @Argument filter: EventFilter?,
+        @Argument pagination: Pagination
+    ): EventCounts {
+        val user = Util.resolveUser(userRepository)
+        return eventService.findEventCounts(
+            fields = eventTrackerFields.toSet() + deviceStateFields.toSet() + networkStateFields.toSet(),
             userId = user.id,
             projectId = ProjectId(projectId),
             from = from?.let(UtcDateTime::invoke),

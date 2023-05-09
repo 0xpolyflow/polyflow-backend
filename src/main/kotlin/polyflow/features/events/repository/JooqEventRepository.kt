@@ -4,10 +4,13 @@ package polyflow.features.events.repository
 
 import mu.KLogging
 import org.jooq.DSLContext
+import org.jooq.Field
 import org.jooq.Record
 import org.jooq.Record1
+import org.jooq.Record2
 import org.jooq.SelectConditionStep
 import org.jooq.SelectField
+import org.jooq.SelectSeekStep1
 import org.jooq.impl.DSL
 import org.jooq.impl.TableImpl
 import org.springframework.stereotype.Repository
@@ -26,12 +29,18 @@ import polyflow.features.events.model.request.WalletConnectedEventRequest
 import polyflow.features.events.model.request.filter.DeviceStateField
 import polyflow.features.events.model.request.filter.EventTrackerModelField
 import polyflow.features.events.model.request.filter.FieldGetter
+import polyflow.features.events.model.request.filter.NetworkStateField
 import polyflow.features.events.model.request.filter.Pagination
 import polyflow.features.events.model.response.BlockchainErrorEvent
+import polyflow.features.events.model.response.DeviceStateEventCounts
 import polyflow.features.events.model.response.DeviceStateUniqueValues
 import polyflow.features.events.model.response.ErrorEvent
+import polyflow.features.events.model.response.EventCount
+import polyflow.features.events.model.response.EventCounts
 import polyflow.features.events.model.response.EventResponse
+import polyflow.features.events.model.response.EventTrackerModelEventCounts
 import polyflow.features.events.model.response.EventTrackerModelUniqueValues
+import polyflow.features.events.model.response.NetworkStateEventCounts
 import polyflow.features.events.model.response.TxRequestEvent
 import polyflow.features.events.model.response.UniqueValues
 import polyflow.features.events.model.response.UserLandedEvent
@@ -55,12 +64,17 @@ import polyflow.generated.jooq.udt.records.WalletStateRecord
 import polyflow.util.ChainId
 import polyflow.util.UtcDateTime
 import polyflow.util.WalletAddress
+import java.math.BigInteger
+import kotlin.reflect.KClass
 import polyflow.generated.jooq.udt.TxData as TD
 
 @Repository
 class JooqEventRepository(private val dslContext: DSLContext) : EventRepository { // TODO test
 
-    companion object : KLogging()
+    companion object : KLogging() {
+        const val FIELD_VALUE = "field_value"
+        const val EVENT_COUNT = "event_count"
+    }
 
     override fun findEventById(eventId: EventId): EventResponse? {
         logger.info { "Request event by id: $eventId" }
@@ -182,6 +196,7 @@ class JooqEventRepository(private val dslContext: DSLContext) : EventRepository 
 
         val fetchedValues = fields.associateWith { fetchDistinctFromAllTables<Any>(it) }
 
+        // TODO allow network state fields
         return UniqueValues(
             tracker = EventTrackerModelUniqueValues(
                 eventTracker = fetchedValues.forField(EventTrackerModelField.EVENT_TRACKER),
@@ -203,6 +218,89 @@ class JooqEventRepository(private val dslContext: DSLContext) : EventRepository 
                     ?.map { it.toModel() }?.toTypedArray(),
                 walletProvider = fetchedValues.forField(DeviceStateField.WALLET_PROVIDER),
                 walletType = fetchedValues.forField(DeviceStateField.WALLET_TYPE)
+            )
+        )
+    }
+
+    // TODO optimize this query
+    override fun findEventCounts(
+        fields: Set<FieldGetter>,
+        projectId: ProjectId,
+        from: UtcDateTime?,
+        to: UtcDateTime?,
+        eventFilter: EventFilter?,
+        pagination: Pagination
+    ): EventCounts {
+        fun <T> fetchEventCount(table: EventTable<*, *>, field: FieldGetter): SelectSeekStep1<Record2<T, Int>, Int> {
+            val conditions = listOfNotNull(
+                field.get(table).isNotNull,
+                table.projectId.eq(projectId),
+                from?.let { table.createdAt.le(it) },
+                to?.let { table.createdAt.ge(it) },
+                eventFilter?.createCondition(table)
+            )
+
+            @Suppress("UNCHECKED_CAST") // we need type info to combine multiple unions in fetchDistinctFromAllTables
+            val f = (field.get(table) as Field<T>).`as`(FIELD_VALUE)
+            val eventCount = DSL.count().`as`(EVENT_COUNT)
+
+            return dslContext.select(f, eventCount)
+                .from(table.db)
+                .where(DSL.and(conditions))
+                .groupBy(f)
+                .orderBy(eventCount.desc())
+        }
+
+        fun <T : Any> fetchEventCounts(field: FieldGetter, cls: KClass<T>): Array<EventCount<T>>? =
+            if (fields.contains(field)) {
+                val f = DSL.field(FIELD_VALUE, cls.java)
+                val eventCount = DSL.sum(DSL.field(EVENT_COUNT, Int::class.java))
+
+                dslContext.select(f, eventCount)
+                    .from(
+                        fetchEventCount<T>(EventTables.WalletConnectedTable, field)
+                            .union(fetchEventCount(EventTables.TxRequestTable, field))
+                            .union(fetchEventCount(EventTables.BlockchainErrorTable, field))
+                            .union(fetchEventCount(EventTables.ErrorTable, field))
+                            .union(fetchEventCount(EventTables.UserLandedTable, field))
+                    )
+                    .groupBy(f)
+                    .orderBy(eventCount.desc())
+                    .limit(pagination.limit)
+                    .offset(pagination.offset)
+                    .fetch { EventCount(it.value1(), it.value2().toInt()) }
+                    .toTypedArray()
+            } else {
+                null
+            }
+
+        return EventCounts(
+            tracker = EventTrackerModelEventCounts(
+                eventTracker = fetchEventCounts(EventTrackerModelField.EVENT_TRACKER, String::class),
+                sessionId = fetchEventCounts(EventTrackerModelField.SESSION_ID, String::class),
+                utmSource = fetchEventCounts(EventTrackerModelField.UTM_SOURCE, String::class),
+                utmMedium = fetchEventCounts(EventTrackerModelField.UTM_MEDIUM, String::class),
+                utmCampaign = fetchEventCounts(EventTrackerModelField.UTM_CAMPAIGN, String::class),
+                utmContent = fetchEventCounts(EventTrackerModelField.UTM_CONTENT, String::class),
+                utmTerm = fetchEventCounts(EventTrackerModelField.UTM_TERM, String::class),
+                origin = fetchEventCounts(EventTrackerModelField.ORIGIN, String::class),
+                path = fetchEventCounts(EventTrackerModelField.PATH, String::class),
+                query = fetchEventCounts(EventTrackerModelField.QUERY, String::class)
+            ),
+            device = DeviceStateEventCounts(
+                os = fetchEventCounts(DeviceStateField.OS, String::class),
+                browser = fetchEventCounts(DeviceStateField.BROWSER, String::class),
+                country = fetchEventCounts(DeviceStateField.COUNTRY, String::class),
+                screen = fetchEventCounts(DeviceStateField.SCREEN, ScreenStateRecord::class)
+                    ?.map { EventCount(it.value.toModel(), it.count) }?.toTypedArray(),
+                walletProvider = fetchEventCounts(DeviceStateField.WALLET_PROVIDER, String::class),
+                walletType = fetchEventCounts(DeviceStateField.WALLET_TYPE, String::class)
+            ),
+            network = NetworkStateEventCounts(
+                chainId = fetchEventCounts(NetworkStateField.CHAIN_ID, ChainId::class)
+                    ?.map { EventCount(it.value.value, it.count) }?.toTypedArray(),
+                gasPrice = fetchEventCounts(NetworkStateField.GAS_PRICE, BigInteger::class),
+                blockHeight = fetchEventCounts(NetworkStateField.BLOCK_HEIGHT, BigInteger::class)
             )
         )
     }

@@ -10,6 +10,7 @@ import polyflow.features.events.model.request.filter.FieldGetter
 import polyflow.features.events.model.request.filter.Pagination
 import polyflow.features.events.model.response.BlockchainErrorEvent
 import polyflow.features.events.model.response.ErrorEvent
+import polyflow.features.events.model.response.EventCounts
 import polyflow.features.events.model.response.EventResponse
 import polyflow.features.events.model.response.TxRequestEvent
 import polyflow.features.events.model.response.UniqueValues
@@ -39,6 +40,15 @@ interface EventRepository {
         eventFilter: EventFilter?,
         pagination: Pagination
     ): UniqueValues
+
+    fun findEventCounts(
+        fields: Set<FieldGetter>,
+        projectId: ProjectId,
+        from: UtcDateTime?,
+        to: UtcDateTime?,
+        eventFilter: EventFilter?,
+        pagination: Pagination
+    ): EventCounts
 
     fun create(
         id: EventId,

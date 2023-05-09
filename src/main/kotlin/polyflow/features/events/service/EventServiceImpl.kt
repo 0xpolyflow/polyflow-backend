@@ -14,6 +14,7 @@ import polyflow.features.events.model.request.filter.FieldGetter
 import polyflow.features.events.model.request.filter.Pagination
 import polyflow.features.events.model.response.BlockchainErrorEvent
 import polyflow.features.events.model.response.ErrorEvent
+import polyflow.features.events.model.response.EventCounts
 import polyflow.features.events.model.response.EventResponse
 import polyflow.features.events.model.response.TxRequestEvent
 import polyflow.features.events.model.response.UniqueValues
@@ -89,6 +90,32 @@ class EventServiceImpl(
         requireProjectAccess(userId, projectId, AccessType.READ)
 
         return eventRepository.findUniqueValues(
+            fields = fields,
+            projectId = projectId,
+            from = from,
+            to = to,
+            eventFilter = eventFilter,
+            pagination = pagination
+        )
+    }
+
+    override fun findEventCounts(
+        fields: Set<FieldGetter>,
+        userId: UserId,
+        projectId: ProjectId,
+        from: UtcDateTime?,
+        to: UtcDateTime?,
+        eventFilter: EventFilter?,
+        pagination: Pagination
+    ): EventCounts {
+        logger.info {
+            "Request to fetch event counts values, fields: $fields, userId: $userId, projectId: $projectId," +
+                " from: $from, to: $to, eventFilter: $eventFilter, pagination: $pagination"
+        }
+
+        requireProjectAccess(userId, projectId, AccessType.READ)
+
+        return eventRepository.findEventCounts(
             fields = fields,
             projectId = projectId,
             from = from,

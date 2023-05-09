@@ -4,6 +4,26 @@ scalar UUID
 scalar DateTime
 scalar Duration
 
+type StringEventCount {
+    value: String!
+    count: Int!
+}
+
+type ScreenStateEventCount {
+    value: ScreenState!
+    count: Int!
+}
+
+type LongEventCount {
+    value: Long!
+    count: Int!
+}
+
+type BigIntegerEventCount {
+    value: BigInteger!
+    count: Int!
+}
+
 ## ScreenState
 type ScreenState {
     w: Int!
@@ -64,6 +84,15 @@ type DeviceStateUniqueValues {
     screen: [ScreenState!]
     walletProvider: [String!]
     walletType: [String!]
+}
+
+type DeviceStateEventCounts {
+    os: [StringEventCount!]
+    browser: [StringEventCount!]
+    country: [StringEventCount!]
+    screen: [ScreenStateEventCount!]
+    walletProvider: [StringEventCount!]
+    walletType: [StringEventCount!]
 }
 
 ## EventTrackerModel
@@ -135,6 +164,19 @@ type EventTrackerModelUniqueValues {
     query: [String!]
 }
 
+type EventTrackerModelEventCounts {
+    eventTracker: [StringEventCount!]
+    sessionId: [StringEventCount!]
+    utmSource: [StringEventCount!]
+    utmMedium: [StringEventCount!]
+    utmCampaign: [StringEventCount!]
+    utmContent: [StringEventCount!]
+    utmTerm: [StringEventCount!]
+    origin: [StringEventCount!]
+    path: [StringEventCount!]
+    query: [StringEventCount!]
+}
+
 ## NetworkState
 type NetworkState {
     chainId: Long!
@@ -152,6 +194,18 @@ input NetworkStateFilter {
     chainId: Long
     gasPrice: BigInteger
     blockHeight: BigInteger
+}
+
+enum NetworkStateField {
+    CHAIN_ID,
+    GAS_PRICE,
+    BLOCK_HEIGHT
+}
+
+type NetworkStateEventCounts {
+    chainId: [LongEventCount!]
+    gasPrice: [BigIntegerEventCount!]
+    blockHeight: [BigIntegerEventCount!]
 }
 
 ## TxData
@@ -401,6 +455,12 @@ type UniqueValues {
     device: DeviceStateUniqueValues!
 }
 
+type EventCounts {
+    tracker: EventTrackerModelEventCounts!
+    device: DeviceStateEventCounts!
+    network: NetworkStateEventCounts!
+}
+
 input Pagination {
     limit: Int! = 30
     offset: Int! = 0
@@ -420,6 +480,17 @@ type Query {
         filter: EventFilter,
         pagination: Pagination! = {}
     ): UniqueValues!
+
+    findEventCounts(
+        eventTrackerFields: [EventTrackerModelField!]!,
+        deviceStateFields: [DeviceStateField!]!,
+        networkStateFields: [NetworkStateField!]!,
+        projectId: UUID!,
+        from: DateTime,
+        to: DateTime,
+        filter: EventFilter,
+        pagination: Pagination! = {}
+    ): EventCounts!
 
     #    - All queries should be fetchable with a time range: e.g.
     #    - from (unix timestamp)
