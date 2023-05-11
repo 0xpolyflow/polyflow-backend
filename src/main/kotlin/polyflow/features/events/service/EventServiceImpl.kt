@@ -2,7 +2,6 @@ package polyflow.features.events.service
 
 import mu.KLogging
 import org.springframework.stereotype.Service
-import polyflow.exception.AccessForbiddenException
 import polyflow.exception.ResourceNotFoundException
 import polyflow.features.events.model.params.EventFilter
 import polyflow.features.events.model.request.BlockchainErrorEventRequest
@@ -22,6 +21,7 @@ import polyflow.features.events.model.response.UserLandedEvent
 import polyflow.features.events.model.response.WalletConnectedEvent
 import polyflow.features.events.repository.EventRepository
 import polyflow.features.project.repository.ProjectRepository
+import polyflow.features.project.requireProjectAccess
 import polyflow.generated.jooq.enums.AccessType
 import polyflow.generated.jooq.enums.TxStatus
 import polyflow.generated.jooq.id.EventId
@@ -45,7 +45,7 @@ class EventServiceImpl(
         logger.info { "Request event by id: $eventId, userId: $userId" }
 
         return eventRepository.findEventById(eventId)?.apply {
-            requireProjectAccess(userId, projectId, AccessType.READ)
+            projectRepository.requireProjectAccess(userId, projectId, AccessType.READ)
         } ?: throw ResourceNotFoundException("Event with given ID does not exist for specified project API key")
     }
 
@@ -62,7 +62,7 @@ class EventServiceImpl(
                 " from: $from, to: $to, eventFilter: $eventFilter, pagination: $pagination"
         }
 
-        requireProjectAccess(userId, projectId, AccessType.READ)
+        projectRepository.requireProjectAccess(userId, projectId, AccessType.READ)
 
         return eventRepository.findEvents(
             projectId = projectId,
@@ -87,7 +87,7 @@ class EventServiceImpl(
                 " from: $from, to: $to, eventFilter: $eventFilter, pagination: $pagination"
         }
 
-        requireProjectAccess(userId, projectId, AccessType.READ)
+        projectRepository.requireProjectAccess(userId, projectId, AccessType.READ)
 
         return eventRepository.findUniqueValues(
             fields = fields,
@@ -113,7 +113,7 @@ class EventServiceImpl(
                 " from: $from, to: $to, eventFilter: $eventFilter, pagination: $pagination"
         }
 
-        requireProjectAccess(userId, projectId, AccessType.READ)
+        projectRepository.requireProjectAccess(userId, projectId, AccessType.READ)
 
         return eventRepository.findEventCounts(
             fields = fields,
@@ -202,18 +202,5 @@ class EventServiceImpl(
 
         return eventRepository.updateBlockchainErrorEventTxStatus(eventId, projectId, newStatus)
             ?: throw ResourceNotFoundException("Event with given ID does not exist for specified project API key")
-    }
-
-    private fun requireProjectAccess(userId: UserId, projectId: ProjectId, accessType: AccessType) {
-        val hasAccess = when (accessType) {
-            AccessType.READ -> projectRepository.hasProjectReadAccess(userId, projectId)
-            AccessType.WRITE -> projectRepository.hasProjectWriteAccess(userId, projectId)
-        }
-
-        if (hasAccess.not()) {
-            throw AccessForbiddenException(
-                "Requesting user does not have access to project with id: ${projectId.value}"
-            )
-        }
     }
 }

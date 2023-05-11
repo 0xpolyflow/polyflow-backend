@@ -322,7 +322,7 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
                     DSL.and(
                         listOfNotNull(
                             table.projectId.eq(projectId),
-                            eventFilter?.createCondition(table)
+                            eventFilter?.createCondition(table, projectId)
                         )
                     )
                 )
@@ -471,7 +471,7 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
                     DSL.and(
                         listOfNotNull(
                             table.projectId.eq(projectId),
-                            eventFilter?.createCondition(table)
+                            eventFilter?.createCondition(table, projectId)
                         )
                     )
                 )
@@ -595,7 +595,7 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
                     DSL.and(
                         listOfNotNull(
                             table.projectId.eq(projectId),
-                            eventFilter?.createCondition(table)
+                            eventFilter?.createCondition(table, projectId)
                         )
                     )
                 )
@@ -623,7 +623,7 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
                 DSL.and(
                     listOfNotNull(
                         EventTables.TxRequestTable.projectId.eq(projectId),
-                        eventFilter?.createCondition(EventTables.TxRequestTable)
+                        eventFilter?.createCondition(EventTables.TxRequestTable, projectId)
                     )
                 )
             )
@@ -706,7 +706,7 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
                             table.projectId.eq(projectId),
                             from?.let { table.createdAt.ge(it) },
                             to?.let { table.createdAt.le(it) },
-                            eventFilter?.createCondition(table),
+                            eventFilter?.createCondition(table, projectId),
                         )
                     )
                 )
@@ -752,7 +752,7 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
                         txReqAggregate.isNotNull,
                         EventTables.TxRequestTable.projectId.eq(projectId),
                         EventTables.TxRequestTable.projectId.eq(projectId),
-                        eventFilter?.createCondition(EventTables.TxRequestTable)
+                        eventFilter?.createCondition(EventTables.TxRequestTable, projectId)
                     )
                 )
             )
@@ -810,7 +810,7 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
                 DSL.and(
                     listOfNotNull(
                         EventTables.WalletConnectedTable.projectId.eq(projectId),
-                        eventFilter?.createCondition(EventTables.WalletConnectedTable)
+                        eventFilter?.createCondition(EventTables.WalletConnectedTable, projectId)
                     )
                 )
             )
@@ -832,7 +832,7 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
                 DSL.and(
                     listOfNotNull(
                         EventTables.TxRequestTable.projectId.eq(projectId),
-                        eventFilter?.createCondition(EventTables.TxRequestTable)
+                        eventFilter?.createCondition(EventTables.TxRequestTable, projectId)
                     )
                 )
             )
@@ -1071,7 +1071,7 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
                 eventTable.projectId.eq(this.projectId),
                 this.from?.let { eventTable.createdAt.ge(it) },
                 this.to?.let { eventTable.createdAt.le(it) },
-                this.eventFilter?.createCondition(eventTable)
+                this.eventFilter?.createCondition(eventTable, projectId)
             )
         )
 }

@@ -39,5 +39,8 @@ enum class ErrorCode(val graphQlErrorType: ErrorType) {
     NO_ACTIVE_SUBSCRIPTION(ErrorType.FORBIDDEN),
 
     @Description("Usage limit for this account has been reached; switch to a higher tier to increase the limit")
-    USAGE_LIMIT_EXCEEDED(ErrorType.FORBIDDEN)
+    USAGE_LIMIT_EXCEEDED(ErrorType.FORBIDDEN),
+
+    @Description("Specified alias already exists for the project")
+    ALIAS_ALREADY_EXISTS(ErrorType.BAD_REQUEST)
 }

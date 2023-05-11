@@ -8,6 +8,11 @@ import polyflow.features.events.model.request.filter.NetworkStateFilter
 import polyflow.features.events.model.request.filter.WalletStateFilter
 import polyflow.features.events.repository.EventTable
 import polyflow.features.events.repository.subfield
+import polyflow.generated.jooq.id.ProjectId
+import polyflow.generated.jooq.tables.SessionIdAliasTable
+import polyflow.generated.jooq.tables.UserIdAliasTable
+import polyflow.generated.jooq.tables.WalletAddressAliasTable
+import polyflow.util.Alias
 import polyflow.util.ChainId
 import polyflow.util.WalletAddress
 import polyflow.generated.jooq.udt.DeviceState as DS
@@ -20,9 +25,10 @@ data class EventFilter(
     val tracker: EventTrackerModelFilter?,
     val wallet: WalletStateFilter?,
     val device: DeviceStateFilter?,
-    val network: NetworkStateFilter?
+    val network: NetworkStateFilter?,
+    val aliases: Aliases?
 ) {
-    fun createCondition(eventTable: EventTable<*, *>): Condition? {
+    fun createCondition(eventTable: EventTable<*, *>, projectId: ProjectId): Condition? {
         val etm = ETM.EVENT_TRACKER_MODEL
         val ws = WS.WALLET_STATE
         val ds = DS.DEVICE_STATE
@@ -57,7 +63,17 @@ data class EventFilter(
 
             network?.chainId?.let { eventTable.network.subfield(ns.CHAIN_ID).eq(ChainId(it)) },
             network?.gasPrice?.let { eventTable.network.subfield(ns.GAS_PRICE).eq(it) },
-            network?.blockHeight?.let { eventTable.network.subfield(ns.BLOCK_HEIGHT).eq(it) }
+            network?.blockHeight?.let { eventTable.network.subfield(ns.BLOCK_HEIGHT).eq(it) },
+
+            aliases?.walletAddress?.let {
+                eventTable.wallet.subfield(ws.WALLET_ADDRESS).`in`(walletAddressAliasQuery(Alias(it), projectId))
+            },
+            aliases?.userId?.let {
+                eventTable.tracker.subfield(etm.USER_ID).`in`(userIdAliasQuery(Alias(it), projectId))
+            },
+            aliases?.sessionId?.let {
+                eventTable.tracker.subfield(etm.SESSION_ID).`in`(sessionIdAliasQuery(Alias(it), projectId))
+            }
         )
 
         return if (conditions.isNotEmpty()) {
@@ -66,4 +82,34 @@ data class EventFilter(
             null
         }
     }
+
+    private fun walletAddressAliasQuery(alias: Alias, projectId: ProjectId) =
+        DSL.select(WalletAddressAliasTable.WALLET_ADDRESS)
+            .from(WalletAddressAliasTable)
+            .where(
+                DSL.and(
+                    WalletAddressAliasTable.ALIAS_NAME.eq(alias),
+                    WalletAddressAliasTable.PROJECT_ID.eq(projectId)
+                )
+            )
+
+    private fun userIdAliasQuery(alias: Alias, projectId: ProjectId) =
+        DSL.select(UserIdAliasTable.USER_ID)
+            .from(UserIdAliasTable)
+            .where(
+                DSL.and(
+                    UserIdAliasTable.ALIAS_NAME.eq(alias),
+                    UserIdAliasTable.PROJECT_ID.eq(projectId)
+                )
+            )
+
+    private fun sessionIdAliasQuery(alias: Alias, projectId: ProjectId) =
+        DSL.select(SessionIdAliasTable.SESSION_ID)
+            .from(SessionIdAliasTable)
+            .where(
+                DSL.and(
+                    SessionIdAliasTable.ALIAS_NAME.eq(alias),
+                    SessionIdAliasTable.PROJECT_ID.eq(projectId)
+                )
+            )
 }

@@ -1,6 +1,8 @@
 package polyflow.exception
 
 import org.springframework.http.HttpStatus
+import polyflow.generated.jooq.id.ProjectId
+import polyflow.util.Alias
 
 abstract class ServiceException(
     val errorCode: ErrorCode,
@@ -151,5 +153,15 @@ class UsageLimitExceededException(limitedResource: String) : ServiceException(
 ) {
     companion object {
         private const val serialVersionUID: Long = 2498719280433221332L
+    }
+}
+
+class AliasAlreadyExistsException(aliasType: String, alias: Alias, projectId: ProjectId) : ServiceException(
+    errorCode = ErrorCode.ALIAS_ALREADY_EXISTS,
+    httpStatus = HttpStatus.BAD_REQUEST,
+    message = "$aliasType alias \"${alias.value}\" already exists for project ${projectId.value}"
+) {
+    companion object {
+        private const val serialVersionUID: Long = 5985804647055234020L
     }
 }

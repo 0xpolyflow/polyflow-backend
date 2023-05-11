@@ -140,3 +140,6 @@ object MonthlyDuration : InexactDuration {
 object YearlyDuration : InexactDuration {
     override val show = "YEARLY"
 }
+
+@JvmInline
+value class Alias(val value: String)

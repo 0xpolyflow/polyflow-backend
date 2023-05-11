@@ -19,3 +19,5 @@ fun BlockNumberConverter() = converter({ it: BigInteger -> BlockNumber(it) }, { 
 fun TransactionHashConverter() = converter({ it: String -> TransactionHash(it) }, { it.value })
 
 fun UtcDateTimeConverter() = converter({ it: OffsetDateTime -> UtcDateTime(it) }, { it.value })
+
+fun AliasConverter() = converter({ it: String -> Alias(it) }, { it.value })

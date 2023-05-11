@@ -54,6 +54,11 @@ object ForcedJooqTypes {
             userType = "polyflow.util.UtcDateTime",
             includeExpression = ".*",
             includeTypes = "TIMESTAMPTZ"
+        ),
+        JooqType(
+            userType = "polyflow.util.Alias",
+            includeExpression = "alias_name",
+            includeTypes = "VARCHAR"
         )
     ) + domainIdTypes.map {
         val typeName = it.split("_").joinToString("") { it.toLowerCase().capitalized() }

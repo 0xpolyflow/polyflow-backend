@@ -111,7 +111,7 @@ class JooqEventRepository(private val dslContext: DSLContext) : EventRepository 
                 this.projectId.eq(projectId),
                 from?.let { this.createdAt.le(it) },
                 to?.let { this.createdAt.ge(it) },
-                eventFilter?.createCondition(this)
+                eventFilter?.createCondition(this, projectId)
             )
 
             return dslContext.selectFrom(this.db)
@@ -175,7 +175,7 @@ class JooqEventRepository(private val dslContext: DSLContext) : EventRepository 
                 table.projectId.eq(projectId),
                 from?.let { table.createdAt.le(it) },
                 to?.let { table.createdAt.ge(it) },
-                eventFilter?.createCondition(table)
+                eventFilter?.createCondition(table, projectId)
             )
 
             @Suppress("UNCHECKED_CAST") // we need type info to combine multiple unions in fetchDistinctFromAllTables
@@ -237,7 +237,7 @@ class JooqEventRepository(private val dslContext: DSLContext) : EventRepository 
                 table.projectId.eq(projectId),
                 from?.let { table.createdAt.le(it) },
                 to?.let { table.createdAt.ge(it) },
-                eventFilter?.createCondition(table)
+                eventFilter?.createCondition(table, projectId)
             )
 
             @Suppress("UNCHECKED_CAST") // we need type info to combine multiple unions in fetchDistinctFromAllTables

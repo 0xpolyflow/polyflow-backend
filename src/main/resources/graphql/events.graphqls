@@ -443,11 +443,18 @@ type UsersWalletsAndTransactionsInfo {
     usersWithExecutedTx: Int!
 }
 
+input Aliases {
+    walletAddress: String
+    userId: String
+    sessionId: String
+}
+
 input EventFilter {
     tracker: EventTrackerModelFilter
     wallet: WalletStateFilter
     device: DeviceStateFilter
     network: NetworkStateFilter
+    aliases: Aliases
 }
 
 type UniqueValues {
