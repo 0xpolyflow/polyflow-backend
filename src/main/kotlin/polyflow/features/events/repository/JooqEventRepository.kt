@@ -154,7 +154,7 @@ class JooqEventRepository(private val dslContext: DSLContext) : EventRepository 
         ).fetch { it.toModel() }
 
         return (walletConnectedEvents + txRequestEvents + errorEvents + blockchainErrorEvents + userLandedEvents)
-            .sortedBy { it.createdAt.value }
+            .sortedByDescending { it.createdAt.value }
             .drop(pagination.offset)
             .take(pagination.limit)
     }

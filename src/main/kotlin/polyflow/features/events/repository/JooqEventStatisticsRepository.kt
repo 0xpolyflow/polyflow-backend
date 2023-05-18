@@ -414,6 +414,7 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
         }
 
         return allCounts
+            .sortedByDescending { it.firstEventDateTime }
             .drop(pagination.offset)
             .take(pagination.limit)
             .toTypedArray()
@@ -572,6 +573,7 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
         }
 
         return allCounts
+            .sortedByDescending { it.firstEventDateTime }
             .drop(pagination.offset)
             .take(pagination.limit)
             .toTypedArray()
