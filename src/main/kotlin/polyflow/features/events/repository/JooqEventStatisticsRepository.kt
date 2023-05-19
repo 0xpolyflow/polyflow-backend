@@ -583,14 +583,21 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
     override fun projectUserStats(projectId: ProjectId, eventFilter: EventFilter?): ProjectUserStats {
         logger.debug { "Get project user stats, projectId: $projectId, eventFilter: $eventFilter" }
 
-        data class WalletCount(val n: Int)
+        data class WalletCount(val n: Int, val withProvider: Int)
         data class TxCount(val n: Int)
         data class WalletInfo(val hasWallet: Boolean, val hasConnected: Boolean)
 
         fun fetchUserCount(table: EventTable<*, *>) =
             dslContext.select(
                 table.userId,
-                DSL.countDistinct(table.walletAddress).filterWhere(table.walletAddress.isNotNull)
+                DSL.countDistinct(table.walletAddress).filterWhere(table.walletAddress.isNotNull),
+                DSL.countDistinct(table.walletProvider)
+                    .filterWhere(
+                        DSL.and(
+                            table.walletProvider.isNotNull,
+                            table.walletProvider.ne("none")
+                        )
+                    )
             )
                 .from(table.db)
                 .where(
@@ -603,13 +610,18 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
                 )
                 .groupBy(table.userId)
                 .fetchMap({ it.component1() }) {
-                    WalletCount(it.component2() ?: 0)
+                    WalletCount(
+                        n = it.component2() ?: 0,
+                        withProvider = it.component3() ?: 0
+                    )
                 }
 
         val walletConnectedCount = fetchUserCount(EventTables.WalletConnectedTable)
         val blockchainErrorCount = fetchUserCount(EventTables.BlockchainErrorTable)
         val errorCount = fetchUserCount(EventTables.ErrorTable)
         val userLandedCount = fetchUserCount(EventTables.UserLandedTable)
+        val txRequestUserCount = fetchUserCount(EventTables.TxRequestTable)
+
         val txRequestCount = dslContext.select(
             EventTables.TxRequestTable.userId,
             DSL.countDistinct(EventTables.TxRequestTable.txHash)
@@ -635,14 +647,22 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
             }
 
         val keys = walletConnectedCount.keys + blockchainErrorCount.keys + errorCount.keys +
-            userLandedCount.keys + txRequestCount.keys
+            userLandedCount.keys + txRequestUserCount.keys + txRequestCount.keys
         val walletInfos = keys.map { key ->
-            val wcc = walletConnectedCount[key]?.n ?: 0
-            val ulc = userLandedCount[key]?.n ?: 0
+            val withProvider = (walletConnectedCount[key]?.withProvider ?: 0) +
+                (blockchainErrorCount[key]?.withProvider ?: 0) +
+                (errorCount[key]?.withProvider ?: 0) +
+                (userLandedCount[key]?.withProvider ?: 0) +
+                (txRequestUserCount[key]?.withProvider ?: 0)
+            val n = (walletConnectedCount[key]?.n ?: 0) +
+                (blockchainErrorCount[key]?.n ?: 0) +
+                (errorCount[key]?.n ?: 0) +
+                (userLandedCount[key]?.n ?: 0) +
+                (txRequestUserCount[key]?.n ?: 0)
 
             WalletInfo(
-                hasWallet = wcc + ulc > 0,
-                hasConnected = wcc > 0
+                hasWallet = withProvider > 0,
+                hasConnected = n > 0
             )
         }
 
