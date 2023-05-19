@@ -25,12 +25,14 @@ import polyflow.features.events.model.response.UniqueValues
 import polyflow.features.events.model.response.UserLandedEvent
 import polyflow.features.events.model.response.WalletConnectedEvent
 import polyflow.features.events.service.EventService
+import polyflow.features.portfolio.service.PortfolioService
 import polyflow.features.project.repository.ProjectRepository
 import polyflow.features.user.repository.UserRepository
 import polyflow.generated.jooq.enums.TxStatus
 import polyflow.generated.jooq.id.EventId
 import polyflow.generated.jooq.id.ProjectId
 import polyflow.util.UtcDateTime
+import polyflow.util.WalletAddress
 import java.time.OffsetDateTime
 import java.util.Optional
 import java.util.UUID
@@ -40,6 +42,7 @@ import javax.validation.Valid
 @Controller
 class EventGraphQlController(
     private val eventService: EventService,
+    private val portfolioService: PortfolioService,
     private val userRepository: UserRepository,
     private val projectRepository: ProjectRepository
 ) { // TODO test
@@ -120,6 +123,7 @@ class EventGraphQlController(
         @ContextValue apiKey: Optional<String>
     ): WalletConnectedEvent {
         val project = Util.resolveProject(projectRepository, userRepository, apiKey)
+        portfolioService.fetchAndStorePortfolio(WalletAddress(event.wallet.walletAddress), force = false)
         return eventService.create(project.id, event)
     }
 
@@ -129,6 +133,7 @@ class EventGraphQlController(
         @ContextValue apiKey: Optional<String>
     ): TxRequestEvent {
         val project = Util.resolveProject(projectRepository, userRepository, apiKey)
+        portfolioService.fetchAndStorePortfolio(WalletAddress(event.wallet.walletAddress), force = false)
         return eventService.create(project.id, event)
     }
 
@@ -138,6 +143,7 @@ class EventGraphQlController(
         @ContextValue apiKey: Optional<String>
     ): ErrorEvent {
         val project = Util.resolveProject(projectRepository, userRepository, apiKey)
+        event.wallet?.walletAddress?.let { portfolioService.fetchAndStorePortfolio(WalletAddress(it), force = false) }
         return eventService.create(project.id, event)
     }
 
@@ -147,6 +153,7 @@ class EventGraphQlController(
         @ContextValue apiKey: Optional<String>
     ): BlockchainErrorEvent {
         val project = Util.resolveProject(projectRepository, userRepository, apiKey)
+        portfolioService.fetchAndStorePortfolio(WalletAddress(event.wallet.walletAddress), force = false)
         return eventService.create(project.id, event)
     }
 
@@ -156,6 +163,7 @@ class EventGraphQlController(
         @ContextValue apiKey: Optional<String>
     ): UserLandedEvent {
         val project = Util.resolveProject(projectRepository, userRepository, apiKey)
+        event.wallet?.walletAddress?.let { portfolioService.fetchAndStorePortfolio(WalletAddress(it), force = false) }
         return eventService.create(project.id, event)
     }
 

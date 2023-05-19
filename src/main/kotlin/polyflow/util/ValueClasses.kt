@@ -2,6 +2,9 @@ package polyflow.util
 
 import org.web3j.abi.datatypes.Address
 import org.web3j.abi.datatypes.Uint
+import org.web3j.protocol.core.DefaultBlockParameter
+import org.web3j.protocol.core.DefaultBlockParameterName
+import java.math.BigDecimal
 import java.math.BigInteger
 import java.time.Instant
 import java.time.Month
@@ -57,10 +60,41 @@ value class Balance(val value: Uint) {
 
     val rawValue: BigInteger
         get() = value.value
+
+    fun isPositive() = rawValue > ZERO.rawValue
+
+    fun withDecimals(decimals: Decimals): DecimalBalance =
+        DecimalBalance(rawValue.toBigDecimal().movePointLeft(decimals.value))
 }
 
 @JvmInline
-value class BlockNumber(val value: BigInteger)
+value class Decimals(val value: Int) {
+    companion object {
+        val ZERO = Decimals(0)
+    }
+}
+
+@JvmInline
+value class DecimalBalance(val value: BigDecimal) {
+    operator fun times(price: UsdValue): UsdValue = UsdValue(value * price.value)
+}
+
+sealed interface BlockParameter {
+    fun toWeb3Parameter(): DefaultBlockParameter
+}
+
+@JvmInline
+value class BlockNumber(val value: BigInteger) : BlockParameter {
+    override fun toWeb3Parameter(): DefaultBlockParameter = DefaultBlockParameter.valueOf(value)
+}
+
+enum class BlockName(private val web3BlockName: DefaultBlockParameterName) : BlockParameter {
+    EARLIEST(DefaultBlockParameterName.EARLIEST),
+    LATEST(DefaultBlockParameterName.LATEST),
+    PENDING(DefaultBlockParameterName.PENDING);
+
+    override fun toWeb3Parameter() = web3BlockName
+}
 
 @JvmInline
 value class TransactionHash private constructor(val value: String) {
@@ -143,3 +177,16 @@ object YearlyDuration : InexactDuration {
 
 @JvmInline
 value class Alias(val value: String)
+
+@JvmInline
+value class UsdValue(val value: BigDecimal) {
+    companion object {
+        val ZERO = UsdValue(BigDecimal.ZERO)
+    }
+}
+
+@JvmInline
+value class NftId(val value: BigInteger)
+
+@JvmInline
+value class Amount(val value: BigInteger)

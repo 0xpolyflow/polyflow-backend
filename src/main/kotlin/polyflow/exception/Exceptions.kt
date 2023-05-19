@@ -165,3 +165,13 @@ class AliasAlreadyExistsException(aliasType: String, alias: Alias, projectId: Pr
         private const val serialVersionUID: Long = 5985804647055234020L
     }
 }
+
+class BlockchainReadException(message: String) : ServiceException(
+    errorCode = ErrorCode.BLOCKCHAIN_READ_ERROR,
+    httpStatus = HttpStatus.BAD_REQUEST,
+    message = message
+) {
+    companion object {
+        private const val serialVersionUID: Long = -5979025245655611755L
+    }
+}

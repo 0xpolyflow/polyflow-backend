@@ -1,5 +1,6 @@
 scalar Long
 scalar BigInteger
+scalar BigDecimal
 scalar UUID
 scalar DateTime
 scalar Duration
@@ -473,6 +474,53 @@ input Pagination {
     offset: Int! = 0
 }
 
+## Wallet Portfolio
+
+type AssetBalanceAndValueResponse {
+    name: String!
+    chainId: Long!
+    amount: BigInteger!
+    value: BigDecimal!
+}
+
+type FungibleTokenBalanceAndValueResponse {
+    name: String!
+    tokenAddress: String!
+    chainId: Long!
+    amount: BigInteger!
+    value: BigDecimal!
+}
+
+type NftIdAndValueResponse {
+    id: BigInteger!
+    value: BigDecimal!
+}
+
+type NftTokenBalanceAndValueResponse {
+    name: String!
+    tokenAddress: String!
+    chainId: Long!
+    ownsAsset: Boolean!
+    ownedAssets: [NftIdAndValueResponse!]!
+    totalValue: BigDecimal!
+}
+
+type AssetRpcCallResponse {
+    tokenAddress: String!
+    chainId: Long!
+    isNft: Boolean!
+}
+
+type WalletPortfolioResponse {
+    walletAddress: String!
+    nativeAssetBalances: [AssetBalanceAndValueResponse!]!
+    fungibleTokenBalances: [FungibleTokenBalanceAndValueResponse!]!
+    nftTokenBalances: [NftTokenBalanceAndValueResponse!]!
+    failedRpcCalls: [AssetRpcCallResponse!]!
+    totalValue: BigDecimal!
+    updatedAt: DateTime!
+}
+
 type Query {
     findEventById(id: UUID!): Event!
 
@@ -565,6 +613,8 @@ type Query {
     projectUserStats(projectId: UUID!, filter: EventFilter): ProjectUserStats!
 
     getUserWalletAndTransactionStats(field: EventTrackerModelField!, projectId: UUID!, from: DateTime, to: DateTime, filter: EventFilter, pagination: Pagination! = {}): [UsersWalletsAndTransactionsInfo!]!
+
+    getPortfolio(walletAddress: String!): WalletPortfolioResponse
 }
 
 type Mutation {
@@ -576,4 +626,6 @@ type Mutation {
 
     updateTxRequestEventTxStatus(id: UUID!, newStatus: TxStatus!): TxRequestEvent!
     updateBlockchainErrorEventTxStatus(id: UUID!, newStatus: TxStatus!): BlockchainErrorEvent!
+
+    refreshPortfolio(walletAddress: String!): String!
 }

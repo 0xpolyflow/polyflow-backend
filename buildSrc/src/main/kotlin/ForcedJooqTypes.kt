@@ -59,9 +59,29 @@ object ForcedJooqTypes {
             userType = "polyflow.util.Alias",
             includeExpression = "alias_name",
             includeTypes = "VARCHAR"
+        ),
+        JooqType(
+            userType = "polyflow.util.NftId",
+            includeExpression = "token_id",
+            includeTypes = "NUMERIC"
+        ),
+        JooqType(
+            userType = "polyflow.util.UsdValue",
+            includeExpression = "usd_value",
+            includeTypes = "NUMERIC"
+        ),
+        JooqType(
+            userType = "polyflow.util.Amount",
+            includeExpression = "amount",
+            includeTypes = "NUMERIC"
+        ),
+        JooqType(
+            userType = "polyflow.util.Decimals",
+            includeExpression = "decimals",
+            includeTypes = "INTEGER"
         )
     ) + domainIdTypes.map {
-        val typeName = it.split("_").joinToString("") { it.toLowerCase().capitalized() }
+        val typeName = it.split("_").joinToString("") { s -> s.toLowerCase().capitalized() }
 
         JooqType(
             userType = "${Configurations.Jooq.packageName}.id.$typeName",
