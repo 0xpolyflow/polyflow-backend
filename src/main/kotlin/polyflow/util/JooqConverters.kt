@@ -27,6 +27,8 @@ fun NftIdConverter() = converter({ it: BigInteger -> NftId(it) }, { it.value })
 
 fun UsdValueConverter() = converter({ it: BigDecimal -> UsdValue(it) }, { it.value })
 
+fun EthValueConverter() = converter({ it: BigDecimal -> EthValue(it) }, { it.value })
+
 fun AmountConverter() = converter({ it: BigInteger -> Amount(it) }, { it.value })
 
 fun DecimalsConverter() = converter({ it: Int -> Decimals(it) }, { it.value })

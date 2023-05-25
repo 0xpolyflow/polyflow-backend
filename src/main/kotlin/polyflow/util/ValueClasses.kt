@@ -186,6 +186,13 @@ value class UsdValue(val value: BigDecimal) {
 }
 
 @JvmInline
+value class EthValue(val value: BigDecimal) {
+    companion object {
+        val ZERO = EthValue(BigDecimal.ZERO)
+    }
+}
+
+@JvmInline
 value class NftId(val value: BigInteger)
 
 @JvmInline

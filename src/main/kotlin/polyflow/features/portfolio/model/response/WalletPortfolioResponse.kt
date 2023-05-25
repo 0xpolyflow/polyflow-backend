@@ -39,12 +39,7 @@ data class WalletPortfolioResponse(
                 tokenAddress = it.tokenAddress.rawValue,
                 chainId = it.chainId.value,
                 ownsAsset = it.ownsAsset,
-                ownedAssets = it.ownedAssets.map { a ->
-                    NftIdAndValueResponse(
-                        id = a.id.value,
-                        value = a.value.value
-                    )
-                },
+                amountOfOwnedAssets = it.amountOfOwnedAssets.rawValue,
                 totalValue = it.totalValue.value
             )
         },
@@ -75,17 +70,12 @@ data class FungibleTokenBalanceAndValueResponse(
     val value: BigDecimal
 )
 
-data class NftIdAndValueResponse(
-    val id: BigInteger,
-    val value: BigDecimal
-)
-
 data class NftTokenBalanceAndValueResponse(
     val name: String,
     val tokenAddress: String,
     val chainId: Long,
     val ownsAsset: Boolean,
-    val ownedAssets: List<NftIdAndValueResponse>,
+    val amountOfOwnedAssets: BigInteger,
     val totalValue: BigDecimal
 )
 

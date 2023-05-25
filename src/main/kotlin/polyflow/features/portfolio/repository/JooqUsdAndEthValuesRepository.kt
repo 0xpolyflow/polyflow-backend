@@ -8,17 +8,17 @@ import polyflow.features.portfolio.model.id.Erc20TokenId
 import polyflow.features.portfolio.model.id.NftTokenId
 import polyflow.features.portfolio.model.result.FungibleTokenUsdValue
 import polyflow.features.portfolio.model.result.NativeAssetUsdValue
-import polyflow.features.portfolio.model.result.NftTokenUsdValue
+import polyflow.features.portfolio.model.result.NftTokenEthValue
 import polyflow.generated.jooq.tables.FungibleTokenUsdValueTable
 import polyflow.generated.jooq.tables.NativeAssetUsdValueTable
-import polyflow.generated.jooq.tables.NftTokenUsdValueTable
+import polyflow.generated.jooq.tables.NftTokenEthValueTable
 import polyflow.generated.jooq.tables.records.FungibleTokenUsdValueRecord
 import polyflow.generated.jooq.tables.records.NativeAssetUsdValueRecord
-import polyflow.generated.jooq.tables.records.NftTokenUsdValueRecord
+import polyflow.generated.jooq.tables.records.NftTokenEthValueRecord
 import polyflow.util.ChainId
 
 @Repository
-class JooqUsdValuesRepository(private val dslContext: DSLContext) : UsdValuesRepository { // TODO test
+class JooqUsdAndEthValuesRepository(private val dslContext: DSLContext) : UsdAndEthValuesRepository { // TODO test
 
     companion object : KLogging()
 
@@ -57,18 +57,17 @@ class JooqUsdValuesRepository(private val dslContext: DSLContext) : UsdValuesRep
             .execute()
     }
 
-    override fun upsertNftTokenUsdValue(value: NftTokenUsdValue) {
-        logger.info { "Upsert NFT token USD value: $value" }
+    override fun upsertNftTokenEthValue(value: NftTokenEthValue) {
+        logger.info { "Upsert NFT token ETH value: $value" }
 
-        val record = NftTokenUsdValueRecord(
+        val record = NftTokenEthValueRecord(
             tokenAddress = value.tokenAddress,
-            tokenId = value.tokenId,
             chainId = value.chainId,
-            usdValue = value.usdValue,
+            ethValue = value.ethValue,
             updatedAt = value.updatedAt
         )
 
-        dslContext.insertInto(NftTokenUsdValueTable)
+        dslContext.insertInto(NftTokenEthValueTable)
             .set(record)
             .onDuplicateKeyUpdate()
             .set(record)
@@ -118,31 +117,28 @@ class JooqUsdValuesRepository(private val dslContext: DSLContext) : UsdValuesRep
             }
     }
 
-    override fun fetchNftTokenValues(ids: List<NftTokenId>): Map<NftTokenId, NftTokenUsdValue> {
+    override fun fetchNftTokenValues(ids: List<NftTokenId>): Map<NftTokenId, NftTokenEthValue> {
         logger.debug { "Fetch NFT token values, ids: $ids" }
 
-        return dslContext.selectFrom(NftTokenUsdValueTable)
+        return dslContext.selectFrom(NftTokenEthValueTable)
             .where(
                 DSL.row(
-                    NftTokenUsdValueTable.TOKEN_ADDRESS,
-                    NftTokenUsdValueTable.TOKEN_ID,
-                    NftTokenUsdValueTable.CHAIN_ID
+                    NftTokenEthValueTable.TOKEN_ADDRESS,
+                    NftTokenEthValueTable.CHAIN_ID
                 ).`in`(
-                    ids.map { DSL.row(it.tokenAddress, it.tokenId, it.chainId) }
+                    ids.map { DSL.row(it.tokenAddress, it.chainId) }
                 )
             )
             .fetchMap({
                 NftTokenId(
-                    tokenAddress = it.get(NftTokenUsdValueTable.TOKEN_ADDRESS),
-                    tokenId = it.get(NftTokenUsdValueTable.TOKEN_ID),
-                    chainId = it.get(NftTokenUsdValueTable.CHAIN_ID)
+                    tokenAddress = it.get(NftTokenEthValueTable.TOKEN_ADDRESS),
+                    chainId = it.get(NftTokenEthValueTable.CHAIN_ID)
                 )
             }) {
-                NftTokenUsdValue(
+                NftTokenEthValue(
                     tokenAddress = it.tokenAddress,
-                    tokenId = it.tokenId,
                     chainId = it.chainId,
-                    usdValue = it.usdValue,
+                    ethValue = it.ethValue,
                     updatedAt = it.updatedAt
                 )
             }

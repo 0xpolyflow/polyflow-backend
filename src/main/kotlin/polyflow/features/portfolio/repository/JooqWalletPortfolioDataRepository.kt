@@ -14,9 +14,9 @@ import polyflow.generated.jooq.udt.records.AssetBalanceRecord
 import polyflow.generated.jooq.udt.records.AssetRpcCallRecord
 import polyflow.generated.jooq.udt.records.FungibleTokenBalanceRecord
 import polyflow.generated.jooq.udt.records.NftTokenBalanceRecord
-import polyflow.util.NftId
+import polyflow.util.Balance
 import polyflow.util.WalletAddress
-import java.math.BigInteger
+import java.math.BigDecimal
 
 @Repository // TODO test
 class JooqWalletPortfolioDataRepository(private val dslContext: DSLContext) : WalletPortfolioDataRepository {
@@ -46,9 +46,11 @@ class JooqWalletPortfolioDataRepository(private val dslContext: DSLContext) : Wa
                     tokenAddress = it.tokenAddress,
                     chainId = it.chainId,
                     ownsAsset = it.ownsAsset,
-                    ownedAssets = it.ownedAssets.map(NftId::value)
-                        .map(BigInteger::toBigDecimal)
-                        .toTypedArray()
+                    ownedAssets = Array(it.amountOfOwnedAssets.rawValue.toInt()) { BigDecimal(-1) }
+                    // TODO use actual owned assets
+//                    ownedAssets = it.ownedAssets.map(NftId::value)
+//                        .map(BigInteger::toBigDecimal)
+//                        .toTypedArray()
                 )
             }.toTypedArray(),
             failedRpcCalls = data.failedRpcCalls.map {
@@ -94,7 +96,10 @@ class JooqWalletPortfolioDataRepository(private val dslContext: DSLContext) : Wa
                             tokenAddress = ntb.tokenAddress!!,
                             chainId = ntb.chainId!!,
                             ownsAsset = ntb.ownsAsset!!,
-                            ownedAssets = ntb.ownedAssets!!.map { bd -> NftId(bd!!.toBigInteger()) }
+                            ownedAssets = emptyList(),
+                            // TODO after fetching owned assets
+                            // ownedAssets = ntb.ownedAssets!!.map { bd -> NftId(bd!!.toBigInteger()) },
+                            amountOfOwnedAssets = Balance(ntb.ownedAssets!!.size.toBigInteger())
                         )
                     },
                     failedRpcCalls = r.failedRpcCalls.map { frc ->

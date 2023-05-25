@@ -2,14 +2,12 @@ package polyflow.features.portfolio.model.result
 
 import polyflow.util.ChainId
 import polyflow.util.ContractAddress
-import polyflow.util.NftId
-import polyflow.util.UsdValue
+import polyflow.util.EthValue
 import polyflow.util.UtcDateTime
 
-data class NftTokenUsdValue(
+data class NftTokenEthValue(
     val tokenAddress: ContractAddress,
-    val tokenId: NftId,
     val chainId: ChainId,
-    val usdValue: UsdValue,
+    val ethValue: EthValue,
     val updatedAt: UtcDateTime
 )

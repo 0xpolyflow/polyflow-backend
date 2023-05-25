@@ -33,16 +33,12 @@ data class FungibleTokenBalanceAndValue(
     val value: UsdValue
 )
 
-data class NftIdAndValue(
-    val id: NftId,
-    val value: UsdValue
-)
-
 data class NftTokenBalanceAndValue(
     val name: String,
     val tokenAddress: ContractAddress,
     val chainId: ChainId,
     val ownsAsset: Boolean,
-    val ownedAssets: List<NftIdAndValue>,
+    val ownedAssets: List<NftId>,
+    val amountOfOwnedAssets: Balance,
     val totalValue: UsdValue
 )

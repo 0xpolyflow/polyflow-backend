@@ -17,12 +17,15 @@ import org.web3j.protocol.core.Response
 import org.web3j.protocol.core.methods.request.Transaction
 import polyflow.config.ApplicationProperties
 import polyflow.exception.BlockchainReadException
+import polyflow.features.portfolio.model.result.AssetRpcCall
 import polyflow.util.AccountBalance
 import polyflow.util.Balance
 import polyflow.util.BlockParameter
 import polyflow.util.ContractAddress
+import polyflow.util.EthValue
 import polyflow.util.UsdValue
 import polyflow.util.WalletAddress
+import java.math.BigDecimal
 
 @Service // TODO test
 class Web3jBlockchainService(
@@ -64,10 +67,10 @@ class Web3jBlockchainService(
 
     override fun fetchErc20OrErc721AccountBalances(
         chainSpec: ChainSpec,
-        contractAddresses: List<ContractAddress>,
+        contractAddresses: List<ContractAddressAndType>,
         walletAddress: WalletAddress,
         blockParameter: BlockParameter
-    ): Map<ContractAddress, AccountBalance> {
+    ): BalancesAndFailedRpcCalls {
         logger.debug {
             "Fetching ERC20/ERC721 balance, chainSpec: $chainSpec, contractAddresses: $contractAddresses," +
                 " walletAddress: $walletAddress, blockParameter: $blockParameter"
@@ -84,7 +87,7 @@ class Web3jBlockchainService(
         val batch = web3j.newBatch()
 
         contractAddresses.forEach {
-            val address = it.rawValue
+            val address = it.contractAddress.rawValue
 
             batch.add(
                 web3j.ethCall(
@@ -104,23 +107,47 @@ class Web3jBlockchainService(
             }
         }
 
-        return contractAddresses.zip(responses).mapNotNull { it.second?.let { s -> Pair(it.first, s) } }
-            .associateBy(Pair<ContractAddress, *>::first) {
+        val balances = contractAddresses.zip(responses).mapNotNull { it.second?.let { s -> Pair(it.first, s) } }
+            .associateBy({ it.first.contractAddress }) {
                 AccountBalance(
                     wallet = walletAddress,
                     amount = Balance(it.second)
                 )
             }
+
+        val failedRpcCalls = contractAddresses.zip(responses).filter { it.second == null }
+            .map {
+                AssetRpcCall(
+                    tokenAddress = it.first.contractAddress,
+                    chainId = chainSpec.chainId,
+                    isNft = it.first.isNft
+                )
+            }
+
+        return BalancesAndFailedRpcCalls(balances, failedRpcCalls)
     }
 
-    // uses ChainLink price feed contracts
     override fun fetchCurrentUsdPrice(
         chainSpec: ChainSpec,
         priceFeedContract: ContractAddress,
         blockParameter: BlockParameter
-    ): UsdValue {
+    ): UsdValue = UsdValue(fetchCurrentPrice(chainSpec, priceFeedContract, blockParameter, "USD"))
+
+    override fun fetchCurrentEthPrice(
+        chainSpec: ChainSpec,
+        priceFeedContract: ContractAddress,
+        blockParameter: BlockParameter
+    ): EthValue = EthValue(fetchCurrentPrice(chainSpec, priceFeedContract, blockParameter, "ETH"))
+
+    // uses ChainLink price feed contracts
+    private fun fetchCurrentPrice(
+        chainSpec: ChainSpec,
+        priceFeedContract: ContractAddress,
+        blockParameter: BlockParameter,
+        currency: String
+    ): BigDecimal {
         logger.debug {
-            "Fetching asset price in USD, chainSpec: $chainSpec, priceFeedContract: $priceFeedContract," +
+            "Fetching asset price in $currency, chainSpec: $chainSpec, priceFeedContract: $priceFeedContract," +
                 " blockParameter: $blockParameter"
         }
 
@@ -156,7 +183,7 @@ class Web3jBlockchainService(
         )
 
         val batchResponse = batch.sendSafely()
-            ?: throw BlockchainReadException("Unable to execute batch call to fetch ERC20 balances")
+            ?: throw BlockchainReadException("Unable to execute batch call to fetch asset $currency balances")
 
         val decimals = batchResponse.responses?.get(0)?.takeIf { !it.hasError() }?.let {
             decimalsFunction.tryDecode(it.result.toString())
@@ -168,7 +195,7 @@ class Web3jBlockchainService(
                 ?.firstOrNull() as? Int256
         } ?: throw BlockchainReadException("Could not fetch latest price feed")
 
-        return UsdValue(unscaledUsdValue.value.toBigDecimal().movePointLeft(decimals.value.toInt()))
+        return unscaledUsdValue.value.toBigDecimal().movePointLeft(decimals.value.toInt())
     }
 
     private fun Function.tryDecode(data: String): List<Type<*>>? =

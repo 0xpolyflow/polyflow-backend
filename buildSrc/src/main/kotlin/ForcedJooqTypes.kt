@@ -71,6 +71,11 @@ object ForcedJooqTypes {
             includeTypes = "NUMERIC"
         ),
         JooqType(
+            userType = "polyflow.util.EthValue",
+            includeExpression = "eth_value",
+            includeTypes = "NUMERIC"
+        ),
+        JooqType(
             userType = "polyflow.util.Amount",
             includeExpression = "amount",
             includeTypes = "NUMERIC"

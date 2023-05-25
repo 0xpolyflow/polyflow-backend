@@ -491,17 +491,12 @@ type FungibleTokenBalanceAndValueResponse {
     value: BigDecimal!
 }
 
-type NftIdAndValueResponse {
-    id: BigInteger!
-    value: BigDecimal!
-}
-
 type NftTokenBalanceAndValueResponse {
     name: String!
     tokenAddress: String!
     chainId: Long!
     ownsAsset: Boolean!
-    ownedAssets: [NftIdAndValueResponse!]!
+    amountOfOwnedAssets: BigInteger!
     totalValue: BigDecimal!
 }
 

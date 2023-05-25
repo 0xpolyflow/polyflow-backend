@@ -6,31 +6,36 @@ import org.springframework.beans.factory.DisposableBean
 import org.springframework.stereotype.Service
 import polyflow.blockchain.BlockchainService
 import polyflow.blockchain.ChainSpec
+import polyflow.blockchain.ContractAddressAndType
 import polyflow.config.PortfolioProperties
 import polyflow.features.portfolio.model.id.Erc20TokenId
+import polyflow.features.portfolio.model.id.NftTokenId
 import polyflow.features.portfolio.model.json.ChainDefinitionsJson
 import polyflow.features.portfolio.model.json.TokenDefinitionsJson
 import polyflow.features.portfolio.model.result.AssetBalance
 import polyflow.features.portfolio.model.result.AssetBalanceAndValue
+import polyflow.features.portfolio.model.result.AssetRpcCall
 import polyflow.features.portfolio.model.result.ChainDefinitions
 import polyflow.features.portfolio.model.result.Deployment
 import polyflow.features.portfolio.model.result.FungibleTokenBalance
 import polyflow.features.portfolio.model.result.FungibleTokenBalanceAndValue
 import polyflow.features.portfolio.model.result.FungibleTokenUsdValue
 import polyflow.features.portfolio.model.result.NativeAssetUsdValue
-import polyflow.features.portfolio.model.result.NftIdAndValue
 import polyflow.features.portfolio.model.result.NftTokenBalance
 import polyflow.features.portfolio.model.result.NftTokenBalanceAndValue
+import polyflow.features.portfolio.model.result.NftTokenEthValue
 import polyflow.features.portfolio.model.result.PriceFeed
 import polyflow.features.portfolio.model.result.Token
 import polyflow.features.portfolio.model.result.TokenDefinitions
 import polyflow.features.portfolio.model.result.WalletPortfolioData
 import polyflow.features.portfolio.model.result.WalletPortfolioDataAndValue
-import polyflow.features.portfolio.repository.UsdValuesRepository
+import polyflow.features.portfolio.repository.UsdAndEthValuesRepository
 import polyflow.features.portfolio.repository.WalletPortfolioDataRepository
+import polyflow.util.AccountBalance
 import polyflow.util.ChainId
 import polyflow.util.ContractAddress
 import polyflow.util.Decimals
+import polyflow.util.EthValue
 import polyflow.util.UsdValue
 import polyflow.util.UtcDateTime
 import polyflow.util.UtcDateTimeProvider
@@ -43,7 +48,7 @@ import java.time.Duration as JavaDuration
 class PortfolioServiceImpl(
     private val blockchainService: BlockchainService,
     private val walletPortfolioDataRepository: WalletPortfolioDataRepository,
-    private val usdValuesRepository: UsdValuesRepository,
+    private val usdValuesRepository: UsdAndEthValuesRepository,
     private val utcDateTimeProvider: UtcDateTimeProvider,
     private val portfolioProperties: PortfolioProperties,
     objectMapper: ObjectMapper
@@ -57,6 +62,7 @@ class PortfolioServiceImpl(
         )
 
         private val EMPTY_PRICE = Price("", UsdValue.ZERO, Decimals.ZERO)
+        private val ETH_CHAIN_ID = ChainId(1L)
     }
 
     private val currentlyFetchingPortfolios: MutableSet<WalletAddress> = ConcurrentHashMap.newKeySet()
@@ -97,7 +103,10 @@ class PortfolioServiceImpl(
         return walletPortfolioDataRepository.getWalletPortfolioData(walletAddress)?.let { portfolio ->
             val now = utcDateTimeProvider.getUtcDateTime()
             val ownedNativeAssets = portfolio.nativeAssetBalances.filter { it.amount.isPositive() }
-            val nativeAssetPrices = fetchNativeAssetPrices(ownedNativeAssets.map { it.chainId }, now)
+            val nativeAssetChainIds = ownedNativeAssets.map { it.chainId }.let {
+                if (it.contains(ETH_CHAIN_ID)) it else it + ETH_CHAIN_ID
+            }
+            val nativeAssetPrices = fetchNativeAssetPrices(nativeAssetChainIds, now)
             val nativeAssetBalances = ownedNativeAssets.map {
                 val price = nativeAssetPrices[it.chainId] ?: EMPTY_PRICE
 
@@ -128,26 +137,22 @@ class PortfolioServiceImpl(
 
             val ownedErc721Assets = portfolio.nftTokenBalances.filter { it.ownsAsset }
             val erc721AssetPrices = fetchErc721AssetPrices(
-                ownedErc721Assets.map { Erc20TokenId(it.chainId, it.tokenAddress) }, now
+                tokens = ownedErc721Assets.map { NftTokenId(it.chainId, it.tokenAddress) },
+                now = now,
+                ethPrice = nativeAssetPrices[ETH_CHAIN_ID]?.price ?: UsdValue.ZERO
             )
-            // TODO fetch NFT values after implementation of NFT ownership check
             val erc721Balances = ownedErc721Assets.map {
-                val id = Erc20TokenId(it.chainId, it.tokenAddress)
+                val id = NftTokenId(it.chainId, it.tokenAddress)
                 val price = erc721AssetPrices[id] ?: EMPTY_PRICE
-                val ownedAssets = it.ownedAssets.map { nftId ->
-                    NftIdAndValue(
-                        id = nftId,
-                        value = UsdValue.ZERO // TODO calculate NFT value
-                    )
-                }
 
                 NftTokenBalanceAndValue(
                     name = price.name,
                     tokenAddress = it.tokenAddress,
                     chainId = it.chainId,
                     ownsAsset = it.ownsAsset,
-                    ownedAssets = ownedAssets,
-                    totalValue = UsdValue(ownedAssets.sumOf { v -> v.value.value })
+                    ownedAssets = it.ownedAssets,
+                    amountOfOwnedAssets = it.amountOfOwnedAssets,
+                    totalValue = it.amountOfOwnedAssets.withDecimals(price.decimals) * price.price
                 )
             }
 
@@ -188,8 +193,16 @@ class PortfolioServiceImpl(
         }
 
         val chainsById = chainDefinitions.chains.associateBy { it.chainId }
-        val erc20TokenBalances = tokenDefinitions.erc20Tokens.fetchBalances(chainsById, walletAddress)
-        val erc721TokenBalances = tokenDefinitions.erc721Tokens.fetchBalances(chainsById, walletAddress)
+        val (erc20TokenBalances, failedErc20RpcCalls) = tokenDefinitions.erc20Tokens.fetchBalances(
+            chainsById = chainsById,
+            walletAddress = walletAddress,
+            isNft = false
+        )
+        val (erc721TokenBalances, failedErc721RpcCalls) = tokenDefinitions.erc721Tokens.fetchBalances(
+            chainsById = chainsById,
+            walletAddress = walletAddress,
+            isNft = true
+        )
 
         val walletPortfolioData = WalletPortfolioData(
             walletAddress = walletAddress,
@@ -209,36 +222,63 @@ class PortfolioServiceImpl(
                         tokenAddress = it.key,
                         chainId = t.first,
                         ownsAsset = t.second.amount.isPositive(),
+                        amountOfOwnedAssets = t.second.amount,
                         ownedAssets = emptyList() // TODO fetch owned NFTs
                     )
                 }
             },
-            failedRpcCalls = emptyList(), // TODO in the future...
+            failedRpcCalls = failedErc20RpcCalls + failedErc721RpcCalls,
             updatedAt = now
         )
 
         walletPortfolioDataRepository.upsertWalletPortfolioData(walletPortfolioData)
     }
 
-    private fun <T : Token> List<T>.fetchBalances(chainsById: Map<ChainId, ChainSpec>, walletAddress: WalletAddress) =
-        this.flatMap {
+    private fun <T : Token> List<T>.fetchBalances(
+        chainsById: Map<ChainId, ChainSpec>,
+        walletAddress: WalletAddress,
+        isNft: Boolean
+    ): Pair<Map<ContractAddress, List<Pair<ChainId, AccountBalance>>>, List<AssetRpcCall>> {
+        data class FetchResponse(
+            val chainId: ChainId,
+            val contractAddress: ContractAddress,
+            val accountBalance: AccountBalance,
+            val failedRpcCalls: List<AssetRpcCall>
+        )
+
+        val responses = this.flatMap {
             it.deployments.mapNotNull { d -> chainsById[d.chainId]?.let { cs -> Pair(cs, d.address) } }
         }
             .groupBy(Pair<ChainSpec, *>::first) { it.second }
             .filter { it.value.isNotEmpty() }
             .flatMap {
-                val balances = blockchainService.fetchErc20OrErc721AccountBalances(it.key, it.value, walletAddress)
-                    .toList()
+                val balancesAndFailedRpcCalls = blockchainService.fetchErc20OrErc721AccountBalances(
+                    it.key,
+                    it.value.map { ca -> ContractAddressAndType(ca, isNft) },
+                    walletAddress
+                )
 
-                balances.map { b -> Triple(it.key.chainId, b.first, b.second) }
+                balancesAndFailedRpcCalls.balances.toList().map { b ->
+                    FetchResponse(
+                        chainId = it.key.chainId,
+                        contractAddress = b.first,
+                        accountBalance = b.second,
+                        failedRpcCalls = balancesAndFailedRpcCalls.failedRpcCalls
+                    )
+                }
             }
-            .groupBy(Triple<*, ContractAddress, *>::second) { Pair(it.first, it.third) }
+
+        return Pair(
+            responses.groupBy(FetchResponse::contractAddress) { Pair(it.chainId, it.accountBalance) },
+            responses.flatMap { it.failedRpcCalls }.distinct()
+        )
+    }
 
     private fun fetchNativeAssetPrices(
         chains: List<ChainId>,
         now: UtcDateTime
     ): Map<ChainId, Price> {
-        val upToDatePrices = usdValuesRepository.fetchNativeAssetValues(chains).filterNot {
+        val upToDatePrices = usdValuesRepository.fetchNativeAssetValues(chains.toList()).filterNot {
             it.value.updatedAt.olderThan(portfolioProperties.balanceRefreshInterval, now)
         }
 
@@ -343,18 +383,74 @@ class PortfolioServiceImpl(
     }
 
     private fun fetchErc721AssetPrices(
-        tokens: List<Erc20TokenId>, // TODO ERC20TokenId is here on purpose for now
-        now: UtcDateTime
-    ): Map<Erc20TokenId, Price> {
-        val emptyPricesWithNames = tokens.map {
-            val name = tokenDefinitions.erc721Tokens.find { nft ->
-                nft.deployments.contains(Deployment(it.tokenAddress, it.chainId))
-            }?.name ?: ""
-
-            Pair(it, Price(name, UsdValue.ZERO, Decimals.ZERO)) // TODO fetch price
+        tokens: List<NftTokenId>,
+        now: UtcDateTime,
+        ethPrice: UsdValue
+    ): Map<NftTokenId, Price> {
+        val upToDatePrices = usdValuesRepository.fetchNftTokenValues(tokens).filterNot {
+            it.value.updatedAt.olderThan(portfolioProperties.balanceRefreshInterval, now)
         }
 
-        return emptyPricesWithNames.toMap()
+        data class TokenInfo(
+            val id: NftTokenId,
+            val name: String
+        )
+
+        val missingPrices = tokens.toSet() - upToDatePrices.keys
+        val missingPriceFeeds = missingPrices.mapNotNull {
+            tokenDefinitions.erc721Tokens.find { erc721 ->
+                erc721.deployments.contains(Deployment(it.tokenAddress, it.chainId))
+            }?.let { token -> Pair(token.ethPriceFeed, TokenInfo(it, token.name)) }
+        }.groupBy(Pair<PriceFeed, *>::first, Pair<*, TokenInfo>::second)
+
+        data class EthPrice(
+            val name: String,
+            val price: EthValue
+        )
+
+        val refreshedPrices = missingPriceFeeds.flatMap {
+            val priceFeed = it.key
+            val price = chainDefinitions.chains.find { cs -> cs.chainId == priceFeed.chainId }?.let { chainSpec ->
+                blockchainService.fetchCurrentEthPrice(
+                    chainSpec = chainSpec,
+                    priceFeedContract = priceFeed.contractAddress
+                )
+            } ?: EthValue.ZERO
+
+            it.value.map { tokenInfo ->
+                Pair(tokenInfo.id, EthPrice(tokenInfo.name, price))
+            }
+        }.toMap()
+
+        refreshedPrices.forEach {
+            usdValuesRepository.upsertNftTokenEthValue(
+                NftTokenEthValue(
+                    tokenAddress = it.key.tokenAddress,
+                    chainId = it.key.chainId,
+                    ethValue = it.value.price,
+                    updatedAt = now
+                )
+            )
+        }
+
+        val upToDatePricesWithName = upToDatePrices.mapValues {
+            val name = tokenDefinitions.erc721Tokens.find { erc721 ->
+                erc721.deployments.contains(Deployment(it.key.tokenAddress, it.key.chainId))
+            }?.name ?: ""
+            Price(
+                name = name,
+                price = UsdValue(it.value.ethValue.value * ethPrice.value),
+                decimals = Decimals.ZERO
+            )
+        }
+
+        return upToDatePricesWithName + refreshedPrices.mapValues {
+            Price(
+                name = it.value.name,
+                price = UsdValue(it.value.price.value * ethPrice.value),
+                decimals = Decimals.ZERO
+            )
+        }
     }
 
     private fun UtcDateTime.olderThan(duration: JavaDuration, now: UtcDateTime) =

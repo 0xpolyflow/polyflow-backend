@@ -31,7 +31,8 @@ data class NftTokenBalance(
     val tokenAddress: ContractAddress,
     val chainId: ChainId,
     val ownsAsset: Boolean,
-    val ownedAssets: List<NftId>
+    val ownedAssets: List<NftId>,
+    val amountOfOwnedAssets: Balance
 )
 
 data class AssetRpcCall(
