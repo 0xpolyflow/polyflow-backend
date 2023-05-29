@@ -42,5 +42,11 @@ enum class ErrorCode(val graphQlErrorType: ErrorType) {
     USAGE_LIMIT_EXCEEDED(ErrorType.FORBIDDEN),
 
     @Description("Specified alias already exists for the project")
-    ALIAS_ALREADY_EXISTS(ErrorType.BAD_REQUEST)
+    ALIAS_ALREADY_EXISTS(ErrorType.BAD_REQUEST),
+
+    @Description(
+        "Requested data cannot be retrieved from the blockchain because it is not well formed (i.e. non-existent" +
+            " contract address, calling non-existent contract function etc.)"
+    )
+    BLOCKCHAIN_READ_ERROR(ErrorType.BAD_REQUEST),
 }

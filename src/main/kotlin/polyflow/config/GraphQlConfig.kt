@@ -16,6 +16,7 @@ class GraphQlConfig : AnnotatedControllerConfigurer() {
         RuntimeWiringConfigurer {
             it.scalar(ExtendedScalars.GraphQLLong)
             it.scalar(ExtendedScalars.GraphQLBigInteger)
+            it.scalar(ExtendedScalars.GraphQLBigDecimal)
             it.scalar(ExtendedScalars.UUID)
             it.scalar(ExtendedScalars.DateTime)
             it.scalar(
