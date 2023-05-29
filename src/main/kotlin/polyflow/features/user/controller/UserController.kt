@@ -1,7 +1,11 @@
 package polyflow.features.user.controller
 
+import com.stripe.model.Product
+import com.stripe.model.Subscription
+import com.stripe.param.SubscriptionListParams
 import org.springframework.http.ResponseEntity
 import org.springframework.validation.annotation.Validated
+import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
@@ -13,6 +17,7 @@ import polyflow.features.user.model.request.PasswordChangeRequest
 import polyflow.features.user.model.request.SecureUserTokenRequest
 import polyflow.features.user.model.request.SecureUserTokenWithPasswordRequest
 import polyflow.features.user.model.response.JwtTokenResponse
+import polyflow.features.user.model.response.SubscriptionInfoResponse
 import polyflow.features.user.model.result.User
 import polyflow.features.user.service.UserService
 import javax.validation.Valid
@@ -54,4 +59,24 @@ class UserController(private val userService: UserService) { // TODO test
         @UserBinding user: User,
         @Valid @RequestBody requestBody: PasswordChangeRequest
     ) = userService.changePassword(user, requestBody)
+
+    @GetMapping("/v1/subscription-info")
+    fun subscriptionInfo(
+        @UserBinding user: User
+    ): ResponseEntity<SubscriptionInfoResponse> {
+        val productName = user.stripeCustomerId?.let { customerId ->
+            val productId = Subscription.list(
+                SubscriptionListParams.builder()
+                    .setCustomer(customerId)
+                    .build()
+            )
+                ?.data?.firstOrNull()
+                ?.items?.data?.firstOrNull()
+                ?.plan?.product
+
+            Product.retrieve(productId)?.name
+        }
+
+        return ResponseEntity.ok(SubscriptionInfoResponse(tierName = productName))
+    }
 }
