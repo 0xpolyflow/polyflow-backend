@@ -17,6 +17,7 @@ import polyflow.features.events.model.response.SessionEventsInfo
 import polyflow.features.events.model.response.UserEventsInfo
 import polyflow.features.events.model.response.UsersWalletsAndTransactionsInfo
 import polyflow.features.events.model.response.WalletConnectionsAndTransactionsInfo
+import polyflow.features.events.model.response.WalletConnectionsAndTransactionsInfoForNetwork
 import polyflow.features.events.service.EventStatisticsService
 import polyflow.features.user.repository.UserRepository
 import polyflow.generated.jooq.id.ProjectId
@@ -286,6 +287,21 @@ class EventStatisticsGraphQlController(
     ): Array<WalletConnectionsAndTransactionsInfo> {
         val user = Util.resolveUser(userRepository)
         return eventStatisticsService.listCountries(
+            projectId = ProjectId(projectId),
+            userId = user.id,
+            eventFilter = filter,
+            pagination = pagination
+        )
+    }
+
+    @QueryMapping
+    fun listNetworks(
+        @Argument projectId: UUID,
+        @Argument filter: EventFilter?,
+        @Argument pagination: Pagination
+    ): Array<WalletConnectionsAndTransactionsInfoForNetwork> {
+        val user = Util.resolveUser(userRepository)
+        return eventStatisticsService.listNetworks(
             projectId = ProjectId(projectId),
             userId = user.id,
             eventFilter = filter,

@@ -24,6 +24,7 @@ import polyflow.features.events.model.response.SessionEventsInfo
 import polyflow.features.events.model.response.UserEventsInfo
 import polyflow.features.events.model.response.UsersWalletsAndTransactionsInfo
 import polyflow.features.events.model.response.WalletConnectionsAndTransactionsInfo
+import polyflow.features.events.model.response.WalletConnectionsAndTransactionsInfoForNetwork
 import polyflow.generated.jooq.enums.TxStatus
 import polyflow.generated.jooq.id.ProjectId
 import polyflow.generated.jooq.tables.TxRequestEventTable
@@ -263,6 +264,79 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
     ): Array<WalletConnectionsAndTransactionsInfo> {
         logger.debug { "List countries, projectId: $projectId, eventFilter: $eventFilter, pagination: $pagination" }
         return listStats(projectId, { it.country }, eventFilter, pagination)
+    }
+
+    // TODO improve efficiency
+    override fun listNetworks(
+        projectId: ProjectId,
+        eventFilter: EventFilter?,
+        pagination: Pagination
+    ): Array<WalletConnectionsAndTransactionsInfoForNetwork> {
+        logger.debug { "List networks, projectId: $projectId, eventFilter: $eventFilter, pagination: $pagination" }
+
+        val walletConnectedKey = EventTables.WalletConnectedTable.chainId
+        val walletCounts = dslContext.select(
+            walletConnectedKey,
+            DSL.count(EventTables.WalletConnectedTable.walletAddress),
+            DSL.countDistinct(EventTables.WalletConnectedTable.walletAddress)
+        )
+            .from(EventTables.WalletConnectedTable.db)
+            .where(
+                DSL.and(
+                    listOfNotNull(
+                        EventTables.WalletConnectedTable.projectId.eq(projectId),
+                        eventFilter?.createCondition(EventTables.WalletConnectedTable, projectId)
+                    )
+                )
+            )
+            .groupBy(walletConnectedKey)
+            .orderBy(walletConnectedKey)
+            .fetchMap({ it.component1().value }) {
+                WalletConnectionsAndTransactionsInfoForNetwork(
+                    chainId = it.component1()?.value ?: -1L,
+                    totalWalletConnections = it.component2(),
+                    uniqueWalletConnections = it.component3(),
+                    executedTransactions = 0
+                )
+            }
+
+        val txRequestKey = EventTables.TxRequestTable.chainId
+        val transactionCounts = dslContext.select(txRequestKey, DSL.count(EventTables.TxRequestTable.createdAt))
+            .from(EventTables.TxRequestTable.db)
+            .where(
+                DSL.and(
+                    listOfNotNull(
+                        EventTables.TxRequestTable.projectId.eq(projectId),
+                        eventFilter?.createCondition(EventTables.TxRequestTable, projectId)
+                    )
+                )
+            )
+            .groupBy(txRequestKey)
+            .orderBy(txRequestKey)
+            .fetchMap({ it.component1().value }) {
+                WalletConnectionsAndTransactionsInfoForNetwork(
+                    chainId = it.component1()?.value ?: -1L,
+                    totalWalletConnections = 0,
+                    uniqueWalletConnections = 0,
+                    executedTransactions = it.component2()
+                )
+            }
+
+        return (walletCounts.keys + transactionCounts.keys).sorted()
+            .map {
+                val walletCount = walletCounts[it]
+                val transactionCount = transactionCounts[it]
+
+                WalletConnectionsAndTransactionsInfoForNetwork(
+                    chainId = it,
+                    totalWalletConnections = walletCount?.totalWalletConnections ?: 0,
+                    uniqueWalletConnections = walletCount?.uniqueWalletConnections ?: 0,
+                    executedTransactions = transactionCount?.executedTransactions ?: 0
+                )
+            }
+            .drop(pagination.offset)
+            .take(pagination.limit)
+            .toTypedArray()
     }
 
     // TODO improve efficiency

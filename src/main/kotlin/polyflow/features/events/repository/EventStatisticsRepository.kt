@@ -13,6 +13,7 @@ import polyflow.features.events.model.response.SessionEventsInfo
 import polyflow.features.events.model.response.UserEventsInfo
 import polyflow.features.events.model.response.UsersWalletsAndTransactionsInfo
 import polyflow.features.events.model.response.WalletConnectionsAndTransactionsInfo
+import polyflow.features.events.model.response.WalletConnectionsAndTransactionsInfoForNetwork
 import polyflow.generated.jooq.id.ProjectId
 import polyflow.util.UtcDateTime
 
@@ -39,6 +40,12 @@ interface EventStatisticsRepository {
         eventFilter: EventFilter?,
         pagination: Pagination
     ): Array<WalletConnectionsAndTransactionsInfo>
+
+    fun listNetworks(
+        projectId: ProjectId,
+        eventFilter: EventFilter?,
+        pagination: Pagination
+    ): Array<WalletConnectionsAndTransactionsInfoForNetwork>
 
     fun listBrowsers(
         projectId: ProjectId,

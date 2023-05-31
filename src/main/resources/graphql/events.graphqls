@@ -402,6 +402,13 @@ type WalletConnectionsAndTransactionsInfo {
     executedTransactions: Int!
 }
 
+type WalletConnectionsAndTransactionsInfoForNetwork {
+    chainId: Long!
+    totalWalletConnections: Int!
+    uniqueWalletConnections: Int!
+    executedTransactions: Int!
+}
+
 type SessionEventsInfo {
     sessionId: String!
     totalEventCount: Int!
@@ -598,6 +605,8 @@ type Query {
     listWalletProviders(projectId: UUID!, filter: EventFilter, pagination: Pagination! = {}): [WalletConnectionsAndTransactionsInfo!]!
 
     listCountries(projectId: UUID!, filter: EventFilter, pagination: Pagination! = {}): [WalletConnectionsAndTransactionsInfo!]!
+
+    listNetworks(projectId: UUID!, filter: EventFilter, pagination: Pagination! = {}): [WalletConnectionsAndTransactionsInfoForNetwork!]!
 
     listBrowsers(projectId: UUID!, filter: EventFilter, pagination: Pagination! = {}): [WalletConnectionsAndTransactionsInfo!]!
 

@@ -16,6 +16,7 @@ import polyflow.features.events.model.response.SessionEventsInfo
 import polyflow.features.events.model.response.UserEventsInfo
 import polyflow.features.events.model.response.UsersWalletsAndTransactionsInfo
 import polyflow.features.events.model.response.WalletConnectionsAndTransactionsInfo
+import polyflow.features.events.model.response.WalletConnectionsAndTransactionsInfoForNetwork
 import polyflow.features.events.repository.EventStatisticsRepository
 import polyflow.features.project.repository.ProjectRepository
 import polyflow.generated.jooq.id.ProjectId
@@ -184,6 +185,21 @@ class EventStatisticsServiceImpl(
         requireProjectReadAccess(userId, projectId)
 
         return eventStatisticsRepository.listCountries(projectId, eventFilter, pagination)
+    }
+
+    override fun listNetworks(
+        projectId: ProjectId,
+        userId: UserId,
+        eventFilter: EventFilter?,
+        pagination: Pagination
+    ): Array<WalletConnectionsAndTransactionsInfoForNetwork> {
+        logger.debug {
+            "List networks, projectId: $projectId, userId: $userId, eventFilter: $eventFilter, pagination: $pagination"
+        }
+
+        requireProjectReadAccess(userId, projectId)
+
+        return eventStatisticsRepository.listNetworks(projectId, eventFilter, pagination)
     }
 
     override fun listBrowsers(
