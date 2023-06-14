@@ -6,6 +6,7 @@ import org.jooq.impl.DSL
 import org.jooq.util.postgres.PostgresDSL
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Repository
+import polyflow.config.ApplicationProperties
 import polyflow.exception.UserAlreadyExistsException
 import polyflow.features.user.model.params.CreateUserParams
 import polyflow.features.user.model.result.User
@@ -17,7 +18,10 @@ import polyflow.generated.jooq.tables.records.UserRecord
 import polyflow.util.UtcDateTime
 
 @Repository
-class JooqUserRepository(private val dslContext: DSLContext) : UserRepository { // TODO test
+class JooqUserRepository(
+    private val dslContext: DSLContext,
+    private val applicationProperties: ApplicationProperties
+) : UserRepository { // TODO test
 
     companion object : KLogging()
 
@@ -141,8 +145,11 @@ class JooqUserRepository(private val dslContext: DSLContext) : UserRepository { 
             )
             .where(
                 DSL.and(
-                    ProjectTable.OWNER_ID.eq(userId),
-                    UserProjectAccessTable.USER_ID.ne(userId)
+                    listOfNotNull(
+                        ProjectTable.OWNER_ID.eq(userId),
+                        UserProjectAccessTable.USER_ID.ne(userId),
+                        applicationProperties.debugAccountId?.let { UserTable.ID.ne(UserId(it)) }
+                    )
                 )
             )
             .fetchOne(DSL.count()) ?: 0

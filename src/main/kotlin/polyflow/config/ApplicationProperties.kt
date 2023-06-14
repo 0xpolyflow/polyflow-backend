@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration
 import polyflow.util.ChainId
 import java.nio.file.Path
 import java.security.interfaces.RSAPrivateCrtKey
+import java.util.UUID
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.toJavaDuration
@@ -19,6 +20,7 @@ import java.time.Duration as JavaDuration
 @ConfigurationProperties(prefix = "polyflow")
 class ApplicationProperties {
     var chain: Map<ChainId, ChainProperties> = emptyMap()
+    var debugAccountId: UUID? = null
 }
 
 @ConstructorBinding

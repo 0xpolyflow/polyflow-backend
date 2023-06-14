@@ -1039,6 +1039,7 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
         uniqueInRange: Boolean,
         pagination: Pagination?
     ): Array<IntTimespanValues> {
+        logger.debug { "Group by duration, number of items: ${this.size}" }
         val start = from ?: firstOrNull()?.component2() ?: return emptyArray()
         val end = to ?: lastOrNull()?.component2()
 

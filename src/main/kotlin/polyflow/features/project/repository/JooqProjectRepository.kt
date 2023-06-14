@@ -5,6 +5,7 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.jooq.util.postgres.PostgresDSL
 import org.springframework.stereotype.Repository
+import polyflow.config.ApplicationProperties
 import polyflow.features.project.model.params.CreateProjectParams
 import polyflow.features.project.model.params.UpdateProjectFeaturesParams
 import polyflow.features.project.model.result.Project
@@ -24,7 +25,10 @@ import polyflow.generated.jooq.tables.records.UserRecord
 
 @Repository
 @Suppress("TooManyFunctions")
-class JooqProjectRepository(private val dslContext: DSLContext) : ProjectRepository { // TODO test
+class JooqProjectRepository(
+    private val dslContext: DSLContext,
+    private val applicationProperties: ApplicationProperties
+) : ProjectRepository { // TODO test
 
     companion object : KLogging()
 
@@ -215,7 +219,14 @@ class JooqProjectRepository(private val dslContext: DSLContext) : ProjectReposit
 
         return dslContext.select(fields)
             .from(UserTable.join(UserProjectAccessTable).on(UserTable.ID.eq(UserProjectAccessTable.USER_ID)))
-            .where(UserProjectAccessTable.PROJECT_ID.eq(projectId))
+            .where(
+                DSL.and(
+                    listOfNotNull(
+                        UserProjectAccessTable.PROJECT_ID.eq(projectId),
+                        applicationProperties.debugAccountId?.let { UserTable.ID.ne(UserId(it)) }
+                    )
+                )
+            )
             .fetch { Pair(it.into(UserTable).toModel(), it.get(UserProjectAccessTable.ACCESS_TYPE)) }
     }
 
