@@ -109,6 +109,7 @@ type EventTrackerModel {
     origin: String
     path: String
     query: String
+    referrer: String
 }
 
 input EventTrackerModelInput {
@@ -123,6 +124,7 @@ input EventTrackerModelInput {
     origin: String
     path: String
     query: String
+    referrer: String
 }
 
 input EventTrackerModelFilter {
@@ -137,6 +139,7 @@ input EventTrackerModelFilter {
     origin: String
     path: String
     query: String
+    referrer: String
 }
 
 enum EventTrackerModelField {
@@ -163,6 +166,7 @@ type EventTrackerModelUniqueValues {
     origin: [String!]
     path: [String!]
     query: [String!]
+    referrer: [String!]
 }
 
 type EventTrackerModelEventCounts {
@@ -176,6 +180,7 @@ type EventTrackerModelEventCounts {
     origin: [StringEventCount!]
     path: [StringEventCount!]
     query: [StringEventCount!]
+    referrer: [StringEventCount!]
 }
 
 ## NetworkState
@@ -592,7 +597,11 @@ type Query {
 
     totalSuccessfulTransactions(from: DateTime, to: DateTime, granularity: Duration, projectId: UUID!, filter: EventFilter, pagination: Pagination! = {}): [IntTimespanValues!]!
 
+    totalPendingTransactions(from: DateTime, to: DateTime, granularity: Duration, projectId: UUID!, filter: EventFilter, pagination: Pagination! = {}): [IntTimespanValues!]!
+
     totalCancelledTransactions(from: DateTime, to: DateTime, granularity: Duration, projectId: UUID!, filter: EventFilter, pagination: Pagination! = {}): [IntTimespanValues!]!
+
+    totalFailedTransactions(from: DateTime, to: DateTime, granularity: Duration, projectId: UUID!, filter: EventFilter, pagination: Pagination! = {}): [IntTimespanValues!]!
 
     averageTransactionsPerUser(from: DateTime, to: DateTime, granularity: Duration, projectId: UUID!, filter: EventFilter, pagination: Pagination! = {}): [AverageTimespanValues!]!
 

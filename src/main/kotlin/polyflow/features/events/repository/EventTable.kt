@@ -48,6 +48,7 @@ interface EventTable<R : Record, T : TableImpl<R>> {
     val origin: Field<String?>
     val path: Field<String?>
     val query: Field<String?>
+    val referrer: Field<String?>
 
     val chainId: Field<ChainId?>
     val gasPrice: Field<BigInteger?>

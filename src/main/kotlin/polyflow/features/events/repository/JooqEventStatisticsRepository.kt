@@ -155,8 +155,36 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
     }
 
     // TODO improve efficiency
+    override fun totalPendingTransactions(query: StatisticsQuery, pagination: Pagination): Array<IntTimespanValues> {
+        logger.debug { "Find pending transactions, query: $query, pagination: $pagination" }
+
+        return fetchTransactions(query) { listOf(it.TX.subfield(TxData.TX_DATA.STATUS).eq(TxStatus.PENDING)) }
+            .groupByDuration(
+                from = query.from,
+                to = query.to,
+                granularity = query.granularity,
+                uniqueInRange = false,
+                pagination = pagination
+            )
+    }
+
+    // TODO improve efficiency
     override fun totalCancelledTransactions(query: StatisticsQuery, pagination: Pagination): Array<IntTimespanValues> {
         logger.debug { "Find cancelled transactions, query: $query, pagination: $pagination" }
+
+        return fetchTransactions(query) { listOf(it.TX.subfield(TxData.TX_DATA.STATUS).eq(TxStatus.CANCELLED)) }
+            .groupByDuration(
+                from = query.from,
+                to = query.to,
+                granularity = query.granularity,
+                uniqueInRange = false,
+                pagination = pagination
+            )
+    }
+
+    // TODO improve efficiency
+    override fun totalFailedTransactions(query: StatisticsQuery, pagination: Pagination): Array<IntTimespanValues> {
+        logger.debug { "Find failed transactions, query: $query, pagination: $pagination" }
 
         return fetchTransactions(query) { listOf(it.TX.subfield(TxData.TX_DATA.STATUS).eq(TxStatus.FAILURE)) }
             .groupByDuration(

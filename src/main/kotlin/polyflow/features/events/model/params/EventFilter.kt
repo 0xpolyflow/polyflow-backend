@@ -47,6 +47,7 @@ data class EventFilter(
             tracker?.origin?.let { eventTable.tracker.subfield(etm.ORIGIN).eq(it) },
             tracker?.path?.let { eventTable.tracker.subfield(etm.PATH).eq(it) },
             tracker?.query?.let { eventTable.tracker.subfield(etm.QUERY_PARAMS).eq(it) },
+            tracker?.referrer?.let { eventTable.tracker.subfield(etm.REFERRER).eq(it) },
 
             wallet?.walletAddress?.let { eventTable.wallet.subfield(ws.WALLET_ADDRESS).eq(WalletAddress(it)) },
             wallet?.gasBalance?.let { eventTable.wallet.subfield(ws.GAS_BALANCE).eq(it) },

@@ -24,7 +24,9 @@ interface EventStatisticsRepository {
     fun periodActiveWallets(query: StatisticsQuery, pagination: Pagination): IntTimespanWithAverage
     fun totalTransactions(query: StatisticsQuery, pagination: Pagination): Array<IntTimespanValues>
     fun totalSuccessfulTransactions(query: StatisticsQuery, pagination: Pagination): Array<IntTimespanValues>
+    fun totalPendingTransactions(query: StatisticsQuery, pagination: Pagination): Array<IntTimespanValues>
     fun totalCancelledTransactions(query: StatisticsQuery, pagination: Pagination): Array<IntTimespanValues>
+    fun totalFailedTransactions(query: StatisticsQuery, pagination: Pagination): Array<IntTimespanValues>
     fun averageTransactionsPerUser(query: StatisticsQuery, pagination: Pagination): Array<AverageTimespanValues>
     fun averageTransactions(query: StatisticsQuery, pagination: Pagination): MovingAverageTimespanValues
     fun minTransactionsInPeriod(query: StatisticsQuery): Int

@@ -154,6 +154,29 @@ class EventStatisticsGraphQlController(
     }
 
     @QueryMapping
+    fun totalPendingTransactions(
+        @Argument from: OffsetDateTime?,
+        @Argument to: OffsetDateTime?,
+        @Argument granularity: Duration?,
+        @Argument projectId: UUID,
+        @Argument filter: EventFilter?,
+        @Argument pagination: Pagination
+    ): Array<IntTimespanValues> {
+        val user = Util.resolveUser(userRepository)
+        return eventStatisticsService.totalPendingTransactions(
+            StatisticsQuery(
+                from = from?.let(UtcDateTime::invoke),
+                to = to?.let(UtcDateTime::invoke),
+                granularity = granularity,
+                projectId = ProjectId(projectId),
+                eventFilter = filter
+            ),
+            userId = user.id,
+            pagination = pagination
+        ).orSingleIntElement(from, to)
+    }
+
+    @QueryMapping
     fun totalCancelledTransactions(
         @Argument from: OffsetDateTime?,
         @Argument to: OffsetDateTime?,
@@ -164,6 +187,29 @@ class EventStatisticsGraphQlController(
     ): Array<IntTimespanValues> {
         val user = Util.resolveUser(userRepository)
         return eventStatisticsService.totalCancelledTransactions(
+            StatisticsQuery(
+                from = from?.let(UtcDateTime::invoke),
+                to = to?.let(UtcDateTime::invoke),
+                granularity = granularity,
+                projectId = ProjectId(projectId),
+                eventFilter = filter
+            ),
+            userId = user.id,
+            pagination = pagination
+        ).orSingleIntElement(from, to)
+    }
+
+    @QueryMapping
+    fun totalFailedTransactions(
+        @Argument from: OffsetDateTime?,
+        @Argument to: OffsetDateTime?,
+        @Argument granularity: Duration?,
+        @Argument projectId: UUID,
+        @Argument filter: EventFilter?,
+        @Argument pagination: Pagination
+    ): Array<IntTimespanValues> {
+        val user = Util.resolveUser(userRepository)
+        return eventStatisticsService.totalFailedTransactions(
             StatisticsQuery(
                 from = from?.let(UtcDateTime::invoke),
                 to = to?.let(UtcDateTime::invoke),

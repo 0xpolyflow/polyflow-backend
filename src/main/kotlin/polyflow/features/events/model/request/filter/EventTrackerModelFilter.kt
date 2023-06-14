@@ -34,5 +34,8 @@ data class EventTrackerModelFilter(
     val path: String?,
 
     @field:MaxStringSize
-    val query: String?
+    val query: String?,
+
+    @field:MaxStringSize
+    val referrer: String?
 )

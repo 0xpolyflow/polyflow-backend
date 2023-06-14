@@ -10,5 +10,6 @@ data class EventTrackerModelEventCounts(
     val utmTerm: Array<EventCount<String>>?,
     val origin: Array<EventCount<String>>?,
     val path: Array<EventCount<String>>?,
-    val query: Array<EventCount<String>>?
+    val query: Array<EventCount<String>>?,
+    val referrer: Array<EventCount<String>>?
 )

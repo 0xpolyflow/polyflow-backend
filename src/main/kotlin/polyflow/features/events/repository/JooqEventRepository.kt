@@ -208,7 +208,8 @@ class JooqEventRepository(private val dslContext: DSLContext) : EventRepository 
                 utmTerm = fetchedValues.forField(EventTrackerModelField.UTM_TERM),
                 origin = fetchedValues.forField(EventTrackerModelField.ORIGIN),
                 path = fetchedValues.forField(EventTrackerModelField.PATH),
-                query = fetchedValues.forField(EventTrackerModelField.QUERY)
+                query = fetchedValues.forField(EventTrackerModelField.QUERY),
+                referrer = fetchedValues.forField(EventTrackerModelField.REFERRER)
             ),
             device = DeviceStateUniqueValues(
                 os = fetchedValues.forField(DeviceStateField.OS),
@@ -285,7 +286,8 @@ class JooqEventRepository(private val dslContext: DSLContext) : EventRepository 
                 utmTerm = fetchEventCounts(EventTrackerModelField.UTM_TERM, String::class),
                 origin = fetchEventCounts(EventTrackerModelField.ORIGIN, String::class),
                 path = fetchEventCounts(EventTrackerModelField.PATH, String::class),
-                query = fetchEventCounts(EventTrackerModelField.QUERY, String::class)
+                query = fetchEventCounts(EventTrackerModelField.QUERY, String::class),
+                referrer = fetchEventCounts(EventTrackerModelField.REFERRER, String::class)
             ),
             device = DeviceStateEventCounts(
                 os = fetchEventCounts(DeviceStateField.OS, String::class),
@@ -471,7 +473,8 @@ private fun EventTrackerModel.toRecord() =
         utmTerm = utmTerm,
         origin = origin,
         path = path,
-        queryParams = query
+        queryParams = query,
+        referrer = referrer
     )
 
 private fun EventTrackerModelRecord.toModel() =
@@ -486,7 +489,8 @@ private fun EventTrackerModelRecord.toModel() =
         utmTerm = utmTerm,
         origin = origin,
         path = path,
-        query = queryParams
+        query = queryParams,
+        referrer = referrer
     )
 
 private fun WalletState.toRecord() =

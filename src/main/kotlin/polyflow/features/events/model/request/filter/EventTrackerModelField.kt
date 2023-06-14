@@ -13,5 +13,6 @@ enum class EventTrackerModelField(override val get: (EventTable<*, *>) -> Field<
     UTM_TERM({ it.utmTerm }),
     ORIGIN({ it.origin }),
     PATH({ it.path }),
-    QUERY({ it.query })
+    QUERY({ it.query }),
+    REFERRER({ it.referrer })
 }

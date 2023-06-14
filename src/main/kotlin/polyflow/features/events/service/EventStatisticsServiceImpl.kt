@@ -100,6 +100,20 @@ class EventStatisticsServiceImpl(
         return eventStatisticsRepository.totalSuccessfulTransactions(query, pagination)
     }
 
+    override fun totalPendingTransactions(
+        query: StatisticsQuery,
+        userId: UserId,
+        pagination: Pagination
+    ): Array<IntTimespanValues> {
+        logger.debug {
+            "Request to fetch total pending transactions, query: $query, userId: $userId, pagination: $pagination"
+        }
+
+        requireProjectReadAccess(userId, query.projectId)
+
+        return eventStatisticsRepository.totalPendingTransactions(query, pagination)
+    }
+
     override fun totalCancelledTransactions(
         query: StatisticsQuery,
         userId: UserId,
@@ -112,6 +126,20 @@ class EventStatisticsServiceImpl(
         requireProjectReadAccess(userId, query.projectId)
 
         return eventStatisticsRepository.totalCancelledTransactions(query, pagination)
+    }
+
+    override fun totalFailedTransactions(
+        query: StatisticsQuery,
+        userId: UserId,
+        pagination: Pagination
+    ): Array<IntTimespanValues> {
+        logger.debug {
+            "Request to fetch total failed transactions, query: $query, userId: $userId, pagination: $pagination"
+        }
+
+        requireProjectReadAccess(userId, query.projectId)
+
+        return eventStatisticsRepository.totalFailedTransactions(query, pagination)
     }
 
     override fun averageTransactionsPerUser(

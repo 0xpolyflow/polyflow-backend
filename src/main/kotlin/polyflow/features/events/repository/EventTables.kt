@@ -65,6 +65,7 @@ object EventTables {
         override val origin = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.ORIGIN)
         override val path = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.PATH)
         override val query = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.QUERY_PARAMS)
+        override val referrer = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.REFERRER)
 
         override val chainId = network.subfield(NetworkState.NETWORK_STATE.CHAIN_ID)
         override val gasPrice = network.subfield(NetworkState.NETWORK_STATE.GAS_PRICE)
@@ -106,6 +107,7 @@ object EventTables {
         override val origin = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.ORIGIN)
         override val path = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.PATH)
         override val query = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.QUERY_PARAMS)
+        override val referrer = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.REFERRER)
 
         override val chainId = network.subfield(NetworkState.NETWORK_STATE.CHAIN_ID)
         override val gasPrice = network.subfield(NetworkState.NETWORK_STATE.GAS_PRICE)
@@ -144,6 +146,7 @@ object EventTables {
         override val origin = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.ORIGIN)
         override val path = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.PATH)
         override val query = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.QUERY_PARAMS)
+        override val referrer = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.REFERRER)
 
         override val chainId = network.subfield(NetworkState.NETWORK_STATE.CHAIN_ID)
         override val gasPrice = network.subfield(NetworkState.NETWORK_STATE.GAS_PRICE)
@@ -182,6 +185,7 @@ object EventTables {
         override val origin = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.ORIGIN)
         override val path = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.PATH)
         override val query = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.QUERY_PARAMS)
+        override val referrer = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.REFERRER)
 
         override val chainId = network.subfield(NetworkState.NETWORK_STATE.CHAIN_ID)
         override val gasPrice = network.subfield(NetworkState.NETWORK_STATE.GAS_PRICE)
@@ -220,6 +224,7 @@ object EventTables {
         override val origin = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.ORIGIN)
         override val path = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.PATH)
         override val query = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.QUERY_PARAMS)
+        override val referrer = tracker.subfield(EventTrackerModel.EVENT_TRACKER_MODEL.REFERRER)
 
         override val chainId = network.subfield(NetworkState.NETWORK_STATE.CHAIN_ID)
         override val gasPrice = network.subfield(NetworkState.NETWORK_STATE.GAS_PRICE)

@@ -50,7 +50,19 @@ interface EventStatisticsService {
         pagination: Pagination
     ): Array<IntTimespanValues>
 
+    fun totalPendingTransactions(
+        query: StatisticsQuery,
+        userId: UserId,
+        pagination: Pagination
+    ): Array<IntTimespanValues>
+
     fun totalCancelledTransactions(
+        query: StatisticsQuery,
+        userId: UserId,
+        pagination: Pagination
+    ): Array<IntTimespanValues>
+
+    fun totalFailedTransactions(
         query: StatisticsQuery,
         userId: UserId,
         pagination: Pagination

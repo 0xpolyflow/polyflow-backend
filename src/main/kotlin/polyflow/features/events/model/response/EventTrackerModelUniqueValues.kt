@@ -10,5 +10,6 @@ data class EventTrackerModelUniqueValues(
     val utmTerm: Array<String>?,
     val origin: Array<String>?,
     val path: Array<String>?,
-    val query: Array<String>?
+    val query: Array<String>?,
+    val referrer: Array<String>?
 )
