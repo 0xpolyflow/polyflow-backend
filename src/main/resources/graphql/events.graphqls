@@ -244,9 +244,9 @@ input TxDataInput {
     to: String
     value: BigInteger
     input: String
-    nonce: BigInteger!
-    gas: BigInteger!
-    gasPrice: BigInteger!
+    nonce: BigInteger
+    gas: BigInteger
+    gasPrice: BigInteger
     maxFeePerGas: BigInteger
     maxPriorityFeePerGas: BigInteger
     v: String
