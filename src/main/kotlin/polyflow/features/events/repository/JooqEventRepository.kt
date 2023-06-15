@@ -319,7 +319,7 @@ class JooqEventRepository(private val dslContext: DSLContext) : EventRepository 
             id = id.value,
             projectId = projectId,
             createdAt = createdAt,
-            tracker = event.tracker.toRecord(),
+            tracker = event.tracker.toRecord(findUserIdByWalletAddress(WalletAddress(event.wallet.walletAddress))),
             wallet = event.wallet.toRecord(),
             device = event.device.toRecord(),
             network = event.network.toRecord()
@@ -342,7 +342,7 @@ class JooqEventRepository(private val dslContext: DSLContext) : EventRepository 
             id = id.value,
             projectId = projectId,
             createdAt = createdAt,
-            tracker = event.tracker.toRecord(),
+            tracker = event.tracker.toRecord(findUserIdByWalletAddress(WalletAddress(event.wallet.walletAddress))),
             wallet = event.wallet.toRecord(),
             device = event.device.toRecord(),
             network = event.network.toRecord(),
@@ -366,7 +366,7 @@ class JooqEventRepository(private val dslContext: DSLContext) : EventRepository 
             id = id.value,
             projectId = projectId,
             createdAt = createdAt,
-            tracker = event.tracker.toRecord(),
+            tracker = event.tracker.toRecord(findUserIdByWalletAddress(WalletAddress(event.wallet.walletAddress))),
             errors = event.errors.toTypedArray(),
             wallet = event.wallet.toRecord(),
             device = event.device.toRecord(),
@@ -391,7 +391,9 @@ class JooqEventRepository(private val dslContext: DSLContext) : EventRepository 
             id = id.value,
             projectId = projectId,
             createdAt = createdAt,
-            tracker = event.tracker.toRecord(),
+            tracker = event.tracker.toRecord(
+                event.wallet?.walletAddress?.let { findUserIdByWalletAddress(WalletAddress(it)) }
+            ),
             errors = event.errors.toTypedArray(),
             wallet = event.wallet?.toRecord(),
             device = event.device.toRecord(),
@@ -415,7 +417,9 @@ class JooqEventRepository(private val dslContext: DSLContext) : EventRepository 
             id = id.value,
             projectId = projectId,
             createdAt = createdAt,
-            tracker = event.tracker.toRecord(),
+            tracker = event.tracker.toRecord(
+                event.wallet?.walletAddress?.let { findUserIdByWalletAddress(WalletAddress(it)) }
+            ),
             wallet = event.wallet?.toRecord(),
             device = event.device.toRecord(),
             network = event.network?.toRecord()
@@ -459,12 +463,32 @@ class JooqEventRepository(private val dslContext: DSLContext) : EventRepository 
             .returning()
             .fetchOne { it.toModel() }
     }
+
+    private fun findUserIdByWalletAddress(walletAddress: WalletAddress): String? {
+
+        fun <R : Record, T : TableImpl<R>> EventTable<R, T>.findEventsQuery() =
+            dslContext.select(this.userId, this.createdAt)
+                .from(this.db)
+                .where(this.walletAddress.eq(walletAddress))
+                .orderBy(this.createdAt.asc())
+                .limit(1)
+                .fetchOne()
+
+        val walletConnectedEvent = EventTables.WalletConnectedTable.findEventsQuery()
+        val txRequestEvent = EventTables.TxRequestTable.findEventsQuery()
+        val errorEvent = EventTables.ErrorTable.findEventsQuery()
+        val blockchainErrorEvent = EventTables.BlockchainErrorTable.findEventsQuery()
+        val userLandedEvent = EventTables.UserLandedTable.findEventsQuery()
+
+        return listOfNotNull(walletConnectedEvent, txRequestEvent, errorEvent, blockchainErrorEvent, userLandedEvent)
+            .minByOrNull { it.value2().value }?.value1()
+    }
 }
 
-private fun EventTrackerModel.toRecord() =
+private fun EventTrackerModel.toRecord(overrideUserId: String?) =
     EventTrackerModelRecord(
         eventTracker = eventTracker,
-        userId = userId,
+        userId = overrideUserId ?: userId,
         sessionId = sessionId,
         utmSource = utmSource,
         utmMedium = utmMedium,
@@ -578,9 +602,9 @@ private fun TxDataRecord.toModel() =
         to = toAddress?.rawValue,
         value = txValue,
         input = txInput,
-        nonce = nonce!!,
-        gas = gas!!,
-        gasPrice = gasPrice!!,
+        nonce = nonce,
+        gas = gas,
+        gasPrice = gasPrice,
         maxFeePerGas = maxFeePerGas,
         maxPriorityFeePerGas = maxPriorityFeePerGas,
         v = v,

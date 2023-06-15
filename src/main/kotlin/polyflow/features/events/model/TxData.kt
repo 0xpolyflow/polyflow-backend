@@ -24,17 +24,14 @@ data class TxData(
     @field:MaxFunctionDataSize
     val input: String?,
 
-    @field:NotNull
     @field:ValidUint256
-    val nonce: BigInteger,
+    val nonce: BigInteger?,
 
-    @field:NotNull
     @field:ValidUint256
-    val gas: BigInteger,
+    val gas: BigInteger?,
 
-    @field:NotNull
     @field:ValidUint256
-    val gasPrice: BigInteger,
+    val gasPrice: BigInteger?,
 
     @field:ValidUint256
     val maxFeePerGas: BigInteger?,
