@@ -133,6 +133,8 @@ interface EventStatisticsService {
     ): Array<UserEventsInfo>
 
     fun projectUserStats(
+        from: UtcDateTime?,
+        to: UtcDateTime?,
         projectId: ProjectId,
         userId: UserId,
         eventFilter: EventFilter?

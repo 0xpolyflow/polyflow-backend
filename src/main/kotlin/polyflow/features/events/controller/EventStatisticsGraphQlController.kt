@@ -402,11 +402,15 @@ class EventStatisticsGraphQlController(
 
     @QueryMapping
     fun projectUserStats(
+        @Argument from: OffsetDateTime?,
+        @Argument to: OffsetDateTime?,
         @Argument projectId: UUID,
         @Argument filter: EventFilter?
     ): ProjectUserStats {
         val user = Util.resolveUser(userRepository)
         return eventStatisticsService.projectUserStats(
+            from = from?.let(UtcDateTime::invoke),
+            to = to?.let(UtcDateTime::invoke),
             projectId = ProjectId(projectId),
             userId = user.id,
             eventFilter = filter

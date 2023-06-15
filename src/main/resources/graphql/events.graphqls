@@ -623,7 +623,7 @@ type Query {
 
     listUsers(projectId: UUID!, filter: EventFilter, pagination: Pagination! = {}): [UserEventsInfo!]!
 
-    projectUserStats(projectId: UUID!, filter: EventFilter): ProjectUserStats!
+    projectUserStats(from: DateTime, to: DateTime, projectId: UUID!, filter: EventFilter): ProjectUserStats!
 
     getUserWalletAndTransactionStats(field: EventTrackerModelField!, projectId: UUID!, from: DateTime, to: DateTime, filter: EventFilter, pagination: Pagination! = {}): [UsersWalletsAndTransactionsInfo!]!
 

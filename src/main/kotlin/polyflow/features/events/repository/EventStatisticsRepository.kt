@@ -57,7 +57,13 @@ interface EventStatisticsRepository {
 
     fun listSessions(projectId: ProjectId, eventFilter: EventFilter?, pagination: Pagination): Array<SessionEventsInfo>
     fun listUsers(projectId: ProjectId, eventFilter: EventFilter?, pagination: Pagination): Array<UserEventsInfo>
-    fun projectUserStats(projectId: ProjectId, eventFilter: EventFilter?): ProjectUserStats
+    fun projectUserStats(
+        from: UtcDateTime?,
+        to: UtcDateTime?,
+        projectId: ProjectId,
+        eventFilter: EventFilter?
+    ): ProjectUserStats
+
     fun getUserWalletAndTransactionStats(
         field: EventTrackerModelField,
         projectId: ProjectId,

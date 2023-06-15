@@ -276,15 +276,25 @@ class EventStatisticsServiceImpl(
     }
 
     override fun projectUserStats(
+        from: UtcDateTime?,
+        to: UtcDateTime?,
         projectId: ProjectId,
         userId: UserId,
         eventFilter: EventFilter?
     ): ProjectUserStats {
-        logger.debug { "Get project user stats, projectId: $projectId, userId: $userId, eventFilter: $eventFilter" }
+        logger.debug {
+            "Get project user stats, from: $from, to: $to, projectId: $projectId," +
+                " userId: $userId, eventFilter: $eventFilter"
+        }
 
         requireProjectReadAccess(userId, projectId)
 
-        return eventStatisticsRepository.projectUserStats(projectId, eventFilter)
+        return eventStatisticsRepository.projectUserStats(
+            from = from,
+            to = to,
+            projectId = projectId,
+            eventFilter = eventFilter
+        )
     }
 
     override fun getUserWalletAndTransactionStats(

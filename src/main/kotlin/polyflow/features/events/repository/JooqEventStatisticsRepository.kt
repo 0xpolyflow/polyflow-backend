@@ -682,8 +682,15 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
     }
 
     // TODO improve efficiency
-    override fun projectUserStats(projectId: ProjectId, eventFilter: EventFilter?): ProjectUserStats {
-        logger.debug { "Get project user stats, projectId: $projectId, eventFilter: $eventFilter" }
+    override fun projectUserStats(
+        from: UtcDateTime?,
+        to: UtcDateTime?,
+        projectId: ProjectId,
+        eventFilter: EventFilter?
+    ): ProjectUserStats {
+        logger.debug {
+            "Get project user stats, from: $from, to: $to, projectId: $projectId, eventFilter: $eventFilter"
+        }
 
         data class WalletCount(val n: Int, val withProvider: Int)
         data class TxCount(val n: Int)
@@ -706,6 +713,8 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
                     DSL.and(
                         listOfNotNull(
                             table.projectId.eq(projectId),
+                            from?.let { table.createdAt.ge(it) },
+                            to?.let { table.createdAt.le(it) },
                             eventFilter?.createCondition(table, projectId)
                         )
                     )
@@ -739,6 +748,8 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
                 DSL.and(
                     listOfNotNull(
                         EventTables.TxRequestTable.projectId.eq(projectId),
+                        from?.let { EventTables.TxRequestTable.createdAt.ge(it) },
+                        to?.let { EventTables.TxRequestTable.createdAt.le(it) },
                         eventFilter?.createCondition(EventTables.TxRequestTable, projectId)
                     )
                 )
