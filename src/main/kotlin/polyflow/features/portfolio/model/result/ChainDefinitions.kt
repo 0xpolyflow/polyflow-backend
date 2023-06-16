@@ -18,6 +18,7 @@ data class ChainDefinitions(
                 chainId = ChainId(it.chainId),
                 rpcUrl = it.rpcUrl,
                 name = it.name,
+                symbol = it.symbol,
                 decimals = Decimals(it.decimals),
                 usdPriceFeed = PriceFeed(it.usdPriceFeed)
             )

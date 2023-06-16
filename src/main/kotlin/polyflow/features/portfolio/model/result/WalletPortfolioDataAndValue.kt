@@ -3,6 +3,7 @@ package polyflow.features.portfolio.model.result
 import polyflow.util.Balance
 import polyflow.util.ChainId
 import polyflow.util.ContractAddress
+import polyflow.util.DecimalBalance
 import polyflow.util.NftId
 import polyflow.util.UsdValue
 import polyflow.util.UtcDateTime
@@ -21,7 +22,7 @@ data class WalletPortfolioDataAndValue(
 data class AssetBalanceAndValue(
     val name: String,
     val chainId: ChainId,
-    val amount: Balance,
+    val amount: DecimalBalance,
     val value: UsdValue
 )
 
@@ -29,7 +30,7 @@ data class FungibleTokenBalanceAndValue(
     val name: String,
     val tokenAddress: ContractAddress,
     val chainId: ChainId,
-    val amount: Balance,
+    val amount: DecimalBalance,
     val value: UsdValue
 )
 

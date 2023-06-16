@@ -109,12 +109,13 @@ class PortfolioServiceImpl(
             val nativeAssetPrices = fetchNativeAssetPrices(nativeAssetChainIds, now)
             val nativeAssetBalances = ownedNativeAssets.map {
                 val price = nativeAssetPrices[it.chainId] ?: EMPTY_PRICE
+                val amountWithDecimals = it.amount.withDecimals(price.decimals)
 
                 AssetBalanceAndValue(
                     name = price.name,
                     chainId = it.chainId,
-                    amount = it.amount,
-                    value = it.amount.withDecimals(price.decimals) * price.price
+                    amount = amountWithDecimals,
+                    value = amountWithDecimals * price.price
                 )
             }
 
@@ -125,13 +126,14 @@ class PortfolioServiceImpl(
             val erc20Balances = ownedErc20Assets.map {
                 val id = Erc20TokenId(it.chainId, it.tokenAddress)
                 val price = erc20AssetPrices[id] ?: EMPTY_PRICE
+                val amountWithDecimals = it.amount.withDecimals(price.decimals)
 
                 FungibleTokenBalanceAndValue(
                     name = price.name,
                     tokenAddress = it.tokenAddress,
                     chainId = it.chainId,
-                    amount = it.amount,
-                    value = it.amount.withDecimals(price.decimals) * price.price
+                    amount = amountWithDecimals,
+                    value = amountWithDecimals * price.price
                 )
             }
 
@@ -310,7 +312,7 @@ class PortfolioServiceImpl(
 
         val prices = upToDatePrices.mapValues { Pair(it.value.usdValue, it.value.decimals) } + refreshedPrices
         val pricesWithName = prices.mapValues {
-            val name = chainDefinitions.chains.find { c -> c.chainId == it.key }?.name ?: ""
+            val name = chainDefinitions.chains.find { c -> c.chainId == it.key }?.symbol ?: ""
             Price(
                 name = name,
                 price = it.value.first,

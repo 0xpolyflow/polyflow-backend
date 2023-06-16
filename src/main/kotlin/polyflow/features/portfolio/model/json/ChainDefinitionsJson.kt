@@ -8,6 +8,7 @@ data class ChainSpecJson(
     val chainId: Long,
     val rpcUrl: String,
     val name: String,
+    val symbol: String,
     val decimals: Int,
     val usdPriceFeed: PriceFeedJson
 )

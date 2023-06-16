@@ -492,7 +492,7 @@ input Pagination {
 type AssetBalanceAndValueResponse {
     name: String!
     chainId: Long!
-    amount: BigInteger!
+    amount: BigDecimal!
     value: BigDecimal!
 }
 
@@ -500,7 +500,7 @@ type FungibleTokenBalanceAndValueResponse {
     name: String!
     tokenAddress: String!
     chainId: Long!
-    amount: BigInteger!
+    amount: BigDecimal!
     value: BigDecimal!
 }
 

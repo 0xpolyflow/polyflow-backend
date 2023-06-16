@@ -20,7 +20,7 @@ data class WalletPortfolioResponse(
             AssetBalanceAndValueResponse(
                 name = it.name,
                 chainId = it.chainId.value,
-                amount = it.amount.rawValue,
+                amount = it.amount.value,
                 value = it.value.value
             )
         },
@@ -29,7 +29,7 @@ data class WalletPortfolioResponse(
                 name = it.name,
                 tokenAddress = it.tokenAddress.rawValue,
                 chainId = it.chainId.value,
-                amount = it.amount.rawValue,
+                amount = it.amount.value,
                 value = it.value.value
             )
         },
@@ -58,7 +58,7 @@ data class WalletPortfolioResponse(
 data class AssetBalanceAndValueResponse(
     val name: String,
     val chainId: Long,
-    val amount: BigInteger,
+    val amount: BigDecimal,
     val value: BigDecimal
 )
 
@@ -66,7 +66,7 @@ data class FungibleTokenBalanceAndValueResponse(
     val name: String,
     val tokenAddress: String,
     val chainId: Long,
-    val amount: BigInteger,
+    val amount: BigDecimal,
     val value: BigDecimal
 )
 

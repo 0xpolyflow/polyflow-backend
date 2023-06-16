@@ -11,6 +11,7 @@ data class ChainSpec(
     val chainId: ChainId,
     val rpcUrl: String,
     val name: String,
+    val symbol: String,
     val decimals: Decimals,
     val usdPriceFeed: PriceFeed
 ) {
