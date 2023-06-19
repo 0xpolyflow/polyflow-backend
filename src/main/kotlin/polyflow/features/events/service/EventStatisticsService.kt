@@ -118,6 +118,13 @@ interface EventStatisticsService {
         pagination: Pagination
     ): Array<WalletConnectionsAndTransactionsInfo>
 
+    fun listReferrers(
+        projectId: ProjectId,
+        userId: UserId,
+        eventFilter: EventFilter?,
+        pagination: Pagination
+    ): Array<WalletConnectionsAndTransactionsInfo>
+
     fun listSessions(
         projectId: ProjectId,
         userId: UserId,

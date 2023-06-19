@@ -245,6 +245,21 @@ class EventStatisticsServiceImpl(
         return eventStatisticsRepository.listBrowsers(projectId, eventFilter, pagination)
     }
 
+    override fun listReferrers(
+        projectId: ProjectId,
+        userId: UserId,
+        eventFilter: EventFilter?,
+        pagination: Pagination
+    ): Array<WalletConnectionsAndTransactionsInfo> {
+        logger.debug {
+            "List referrers, projectId: $projectId, userId: $userId, eventFilter: $eventFilter, pagination: $pagination"
+        }
+
+        requireProjectReadAccess(userId, projectId)
+
+        return eventStatisticsRepository.listReferrers(projectId, eventFilter, pagination)
+    }
+
     override fun listSessions(
         projectId: ProjectId,
         userId: UserId,

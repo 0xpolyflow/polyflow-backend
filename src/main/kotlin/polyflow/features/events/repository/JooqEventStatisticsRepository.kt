@@ -313,7 +313,8 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
                 DSL.and(
                     listOfNotNull(
                         EventTables.WalletConnectedTable.projectId.eq(projectId),
-                        eventFilter?.createCondition(EventTables.WalletConnectedTable, projectId)
+                        eventFilter?.createCondition(EventTables.WalletConnectedTable, projectId),
+                        walletConnectedKey.isNotNull
                     )
                 )
             )
@@ -321,10 +322,11 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
             .orderBy(walletConnectedKey)
             .fetchMap({ it.component1().value }) {
                 WalletConnectionsAndTransactionsInfoForNetwork(
-                    chainId = it.component1()?.value ?: -1L,
+                    chainId = it.component1().value,
                     totalWalletConnections = it.component2(),
                     uniqueWalletConnections = it.component3(),
-                    executedTransactions = 0
+                    executedTransactions = 0,
+                    uniqueUsersLanded = 0
                 )
             }
 
@@ -335,7 +337,8 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
                 DSL.and(
                     listOfNotNull(
                         EventTables.TxRequestTable.projectId.eq(projectId),
-                        eventFilter?.createCondition(EventTables.TxRequestTable, projectId)
+                        eventFilter?.createCondition(EventTables.TxRequestTable, projectId),
+                        txRequestKey.isNotNull
                     )
                 )
             )
@@ -343,23 +346,53 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
             .orderBy(txRequestKey)
             .fetchMap({ it.component1().value }) {
                 WalletConnectionsAndTransactionsInfoForNetwork(
-                    chainId = it.component1()?.value ?: -1L,
+                    chainId = it.component1().value,
                     totalWalletConnections = 0,
                     uniqueWalletConnections = 0,
-                    executedTransactions = it.component2()
+                    executedTransactions = it.component2(),
+                    uniqueUsersLanded = 0
                 )
             }
 
-        return (walletCounts.keys + transactionCounts.keys).sorted()
+        val userLandedKey = EventTables.UserLandedTable.chainId
+        val userLandedCounts = dslContext.select(
+            userLandedKey,
+            DSL.countDistinct(EventTables.UserLandedTable.userId)
+        )
+            .from(EventTables.UserLandedTable.db)
+            .where(
+                DSL.and(
+                    listOfNotNull(
+                        EventTables.UserLandedTable.projectId.eq(projectId),
+                        eventFilter?.createCondition(EventTables.UserLandedTable, projectId),
+                        userLandedKey.isNotNull
+                    )
+                )
+            )
+            .groupBy(userLandedKey)
+            .orderBy(userLandedKey)
+            .fetchMap({ it.component1()?.value }) {
+                WalletConnectionsAndTransactionsInfoForNetwork(
+                    chainId = it.component1().value,
+                    totalWalletConnections = 0,
+                    uniqueWalletConnections = 0,
+                    executedTransactions = 0,
+                    uniqueUsersLanded = it.component2()
+                )
+            }
+
+        return (walletCounts.keys + transactionCounts.keys + userLandedCounts.keys).sorted()
             .map {
                 val walletCount = walletCounts[it]
                 val transactionCount = transactionCounts[it]
+                val userLandedCount = userLandedCounts[it]
 
                 WalletConnectionsAndTransactionsInfoForNetwork(
                     chainId = it,
                     totalWalletConnections = walletCount?.totalWalletConnections ?: 0,
                     uniqueWalletConnections = walletCount?.uniqueWalletConnections ?: 0,
-                    executedTransactions = transactionCount?.executedTransactions ?: 0
+                    executedTransactions = transactionCount?.executedTransactions ?: 0,
+                    uniqueUsersLanded = userLandedCount?.uniqueUsersLanded ?: 0
                 )
             }
             .drop(pagination.offset)
@@ -375,6 +408,16 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
     ): Array<WalletConnectionsAndTransactionsInfo> {
         logger.debug { "List browsers, projectId: $projectId, eventFilter: $eventFilter, pagination: $pagination" }
         return listStats(projectId, { it.browser }, eventFilter, pagination)
+    }
+
+    // TODO improve efficiency
+    override fun listReferrers(
+        projectId: ProjectId,
+        eventFilter: EventFilter?,
+        pagination: Pagination
+    ): Array<WalletConnectionsAndTransactionsInfo> {
+        logger.debug { "List referrers, projectId: $projectId, eventFilter: $eventFilter, pagination: $pagination" }
+        return listStats(projectId, { it.referrer }, eventFilter, pagination)
     }
 
     // TODO improve efficiency
@@ -951,12 +994,13 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
             )
             .groupBy(walletConnectedKey)
             .orderBy(walletConnectedKey)
-            .fetchMap({ it.component1() }) {
+            .fetchMap({ it.component1() ?: "unknown" }) {
                 WalletConnectionsAndTransactionsInfo(
                     name = it.component1() ?: "unknown",
                     totalWalletConnections = it.component2(),
                     uniqueWalletConnections = it.component3(),
-                    executedTransactions = 0
+                    executedTransactions = 0,
+                    uniqueUsersLanded = 0
                 )
             }
 
@@ -973,25 +1017,54 @@ class JooqEventStatisticsRepository(private val dslContext: DSLContext) : EventS
             )
             .groupBy(txRequestKey)
             .orderBy(txRequestKey)
-            .fetchMap({ it.component1() }) {
+            .fetchMap({ it.component1() ?: "unknown" }) {
                 WalletConnectionsAndTransactionsInfo(
                     name = it.component1() ?: "unknown",
                     totalWalletConnections = 0,
                     uniqueWalletConnections = 0,
-                    executedTransactions = it.component2()
+                    executedTransactions = it.component2(),
+                    uniqueUsersLanded = 0
                 )
             }
 
-        return (walletCounts.keys + transactionCounts.keys).sorted()
+        val userLandedKey = key(EventTables.UserLandedTable)
+        val userLandedCounts = dslContext.select(
+            userLandedKey,
+            DSL.countDistinct(EventTables.UserLandedTable.userId)
+        )
+            .from(EventTables.UserLandedTable.db)
+            .where(
+                DSL.and(
+                    listOfNotNull(
+                        EventTables.UserLandedTable.projectId.eq(projectId),
+                        eventFilter?.createCondition(EventTables.UserLandedTable, projectId)
+                    )
+                )
+            )
+            .groupBy(userLandedKey)
+            .orderBy(userLandedKey)
+            .fetchMap({ it.component1() ?: "unknown" }) {
+                WalletConnectionsAndTransactionsInfo(
+                    name = it.component1() ?: "unknown",
+                    totalWalletConnections = 0,
+                    uniqueWalletConnections = 0,
+                    executedTransactions = 0,
+                    uniqueUsersLanded = it.component2()
+                )
+            }
+
+        return (walletCounts.keys + transactionCounts.keys + userLandedCounts.keys).sorted()
             .map {
                 val walletCount = walletCounts[it]
                 val transactionCount = transactionCounts[it]
+                val userLandedCount = userLandedCounts[it]
 
                 WalletConnectionsAndTransactionsInfo(
                     name = it,
                     totalWalletConnections = walletCount?.totalWalletConnections ?: 0,
                     uniqueWalletConnections = walletCount?.uniqueWalletConnections ?: 0,
-                    executedTransactions = transactionCount?.executedTransactions ?: 0
+                    executedTransactions = transactionCount?.executedTransactions ?: 0,
+                    uniqueUsersLanded = userLandedCount?.uniqueUsersLanded ?: 0
                 )
             }
             .drop(pagination.offset)

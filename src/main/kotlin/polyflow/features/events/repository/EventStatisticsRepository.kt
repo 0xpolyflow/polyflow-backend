@@ -55,6 +55,12 @@ interface EventStatisticsRepository {
         pagination: Pagination
     ): Array<WalletConnectionsAndTransactionsInfo>
 
+    fun listReferrers(
+        projectId: ProjectId,
+        eventFilter: EventFilter?,
+        pagination: Pagination
+    ): Array<WalletConnectionsAndTransactionsInfo>
+
     fun listSessions(projectId: ProjectId, eventFilter: EventFilter?, pagination: Pagination): Array<SessionEventsInfo>
     fun listUsers(projectId: ProjectId, eventFilter: EventFilter?, pagination: Pagination): Array<UserEventsInfo>
     fun projectUserStats(

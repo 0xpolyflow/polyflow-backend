@@ -406,6 +406,7 @@ type WalletConnectionsAndTransactionsInfo {
     totalWalletConnections: Int!
     uniqueWalletConnections: Int!
     executedTransactions: Int!
+    uniqueUsersLanded: Int!
 }
 
 type WalletConnectionsAndTransactionsInfoForNetwork {
@@ -413,6 +414,7 @@ type WalletConnectionsAndTransactionsInfoForNetwork {
     totalWalletConnections: Int!
     uniqueWalletConnections: Int!
     executedTransactions: Int!
+    uniqueUsersLanded: Int!
 }
 
 type SessionEventsInfo {
@@ -619,6 +621,8 @@ type Query {
     listNetworks(projectId: UUID!, filter: EventFilter, pagination: Pagination! = {}): [WalletConnectionsAndTransactionsInfoForNetwork!]!
 
     listBrowsers(projectId: UUID!, filter: EventFilter, pagination: Pagination! = {}): [WalletConnectionsAndTransactionsInfo!]!
+
+    listReferrers(projectId: UUID!, filter: EventFilter, pagination: Pagination! = {}): [WalletConnectionsAndTransactionsInfo!]!
 
     listSessions(projectId: UUID!, filter: EventFilter, pagination: Pagination! = {}): [SessionEventsInfo!]!
 

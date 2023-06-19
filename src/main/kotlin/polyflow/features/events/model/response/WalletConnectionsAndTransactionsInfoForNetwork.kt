@@ -4,5 +4,6 @@ data class WalletConnectionsAndTransactionsInfoForNetwork(
     val chainId: Long,
     val totalWalletConnections: Int,
     val uniqueWalletConnections: Int,
-    val executedTransactions: Int
+    val executedTransactions: Int,
+    val uniqueUsersLanded: Int
 )

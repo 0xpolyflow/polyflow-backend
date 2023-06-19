@@ -371,6 +371,21 @@ class EventStatisticsGraphQlController(
     }
 
     @QueryMapping
+    fun listReferrers(
+        @Argument projectId: UUID,
+        @Argument filter: EventFilter?,
+        @Argument pagination: Pagination
+    ): Array<WalletConnectionsAndTransactionsInfo> {
+        val user = Util.resolveUser(userRepository)
+        return eventStatisticsService.listReferrers(
+            projectId = ProjectId(projectId),
+            userId = user.id,
+            eventFilter = filter,
+            pagination = pagination
+        )
+    }
+
+    @QueryMapping
     fun listSessions(
         @Argument projectId: UUID,
         @Argument filter: EventFilter?,
