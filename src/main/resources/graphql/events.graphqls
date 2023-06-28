@@ -110,6 +110,7 @@ type EventTrackerModel {
     path: String
     query: String
     referrer: String
+    sdkVersion: String
 }
 
 input EventTrackerModelInput {
@@ -125,6 +126,7 @@ input EventTrackerModelInput {
     path: String
     query: String
     referrer: String
+    sdkVersion: String
 }
 
 input EventTrackerModelFilter {
@@ -374,6 +376,26 @@ input BlockchainErrorEventInput {
     device: DeviceStateInput!
     network: NetworkStateInput!
     tx: TxDataInput!
+}
+
+## SdkErrorEvent - internal use only
+type SdkErrorEvent {
+    id: ID!
+    projectId: UUID!
+    createdAt: DateTime!
+    tracker: EventTrackerModel!
+    wallet: WalletState
+    device: DeviceState
+    network: NetworkState
+    metadata: String
+}
+
+input SdkErrorEventInput {
+    tracker: EventTrackerModelInput!
+    wallet: WalletStateInput
+    device: DeviceStateInput
+    network: NetworkStateInput
+    metadata: String
 }
 
 ## All event types
@@ -641,6 +663,7 @@ type Mutation {
     createErrorEvent(event: ErrorEventInput!): ErrorEvent!
     createBlockchainErrorEvent(event: BlockchainErrorEventInput!): BlockchainErrorEvent!
     createUserLandedEvent(event: UserLandedEventInput!): UserLandedEvent!
+    createSdkErrorEvent(event: SdkErrorEventInput!): SdkErrorEvent!
 
     updateTxRequestEventTxStatus(id: UUID!, newStatus: TxStatus!): TxRequestEvent!
     updateBlockchainErrorEventTxStatus(id: UUID!, newStatus: TxStatus!): BlockchainErrorEvent!

@@ -3,6 +3,7 @@ package polyflow.features.events.repository
 import polyflow.features.events.model.params.EventFilter
 import polyflow.features.events.model.request.BlockchainErrorEventRequest
 import polyflow.features.events.model.request.ErrorEventRequest
+import polyflow.features.events.model.request.SdkErrorEventRequest
 import polyflow.features.events.model.request.TxRequestEventRequest
 import polyflow.features.events.model.request.UserLandedEventRequest
 import polyflow.features.events.model.request.WalletConnectedEventRequest
@@ -12,6 +13,7 @@ import polyflow.features.events.model.response.BlockchainErrorEvent
 import polyflow.features.events.model.response.ErrorEvent
 import polyflow.features.events.model.response.EventCounts
 import polyflow.features.events.model.response.EventResponse
+import polyflow.features.events.model.response.SdkErrorEvent
 import polyflow.features.events.model.response.TxRequestEvent
 import polyflow.features.events.model.response.UniqueValues
 import polyflow.features.events.model.response.UserLandedEvent
@@ -84,6 +86,13 @@ interface EventRepository {
         createdAt: UtcDateTime,
         event: UserLandedEventRequest
     ): UserLandedEvent
+
+    fun create(
+        id: EventId,
+        projectId: ProjectId,
+        createdAt: UtcDateTime,
+        event: SdkErrorEventRequest
+    ): SdkErrorEvent
 
     fun updateTxRequestEventTxStatus(id: EventId, projectId: ProjectId, newStatus: TxStatus): TxRequestEvent?
     fun updateBlockchainErrorEventTxStatus(

@@ -41,5 +41,8 @@ data class EventTrackerModel(
     val query: String?,
 
     @field:MaxStringSize
-    val referrer: String?
+    val referrer: String?,
+
+    @field:MaxStringSize
+    val sdkVersion: String?
 )

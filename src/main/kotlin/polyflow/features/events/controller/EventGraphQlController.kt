@@ -9,6 +9,7 @@ import org.springframework.validation.annotation.Validated
 import polyflow.features.events.model.params.EventFilter
 import polyflow.features.events.model.request.BlockchainErrorEventRequest
 import polyflow.features.events.model.request.ErrorEventRequest
+import polyflow.features.events.model.request.SdkErrorEventRequest
 import polyflow.features.events.model.request.TxRequestEventRequest
 import polyflow.features.events.model.request.UserLandedEventRequest
 import polyflow.features.events.model.request.WalletConnectedEventRequest
@@ -20,6 +21,7 @@ import polyflow.features.events.model.response.BlockchainErrorEvent
 import polyflow.features.events.model.response.ErrorEvent
 import polyflow.features.events.model.response.EventCounts
 import polyflow.features.events.model.response.EventResponse
+import polyflow.features.events.model.response.SdkErrorEvent
 import polyflow.features.events.model.response.TxRequestEvent
 import polyflow.features.events.model.response.UniqueValues
 import polyflow.features.events.model.response.UserLandedEvent
@@ -164,6 +166,15 @@ class EventGraphQlController(
     ): UserLandedEvent {
         val project = Util.resolveProject(projectRepository, userRepository, apiKey)
         event.wallet?.walletAddress?.let { portfolioService.fetchAndStorePortfolio(WalletAddress(it), force = false) }
+        return eventService.create(project.id, event)
+    }
+
+    @MutationMapping
+    fun createSdkErrorEvent(
+        @Valid @Argument event: SdkErrorEventRequest,
+        @ContextValue apiKey: Optional<String>
+    ): SdkErrorEvent {
+        val project = Util.resolveProject(projectRepository, userRepository, apiKey)
         return eventService.create(project.id, event)
     }
 

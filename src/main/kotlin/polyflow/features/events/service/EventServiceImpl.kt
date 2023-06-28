@@ -6,6 +6,7 @@ import polyflow.exception.ResourceNotFoundException
 import polyflow.features.events.model.params.EventFilter
 import polyflow.features.events.model.request.BlockchainErrorEventRequest
 import polyflow.features.events.model.request.ErrorEventRequest
+import polyflow.features.events.model.request.SdkErrorEventRequest
 import polyflow.features.events.model.request.TxRequestEventRequest
 import polyflow.features.events.model.request.UserLandedEventRequest
 import polyflow.features.events.model.request.WalletConnectedEventRequest
@@ -15,6 +16,7 @@ import polyflow.features.events.model.response.BlockchainErrorEvent
 import polyflow.features.events.model.response.ErrorEvent
 import polyflow.features.events.model.response.EventCounts
 import polyflow.features.events.model.response.EventResponse
+import polyflow.features.events.model.response.SdkErrorEvent
 import polyflow.features.events.model.response.TxRequestEvent
 import polyflow.features.events.model.response.UniqueValues
 import polyflow.features.events.model.response.UserLandedEvent
@@ -170,6 +172,17 @@ class EventServiceImpl(
     }
 
     override fun create(projectId: ProjectId, event: UserLandedEventRequest): UserLandedEvent {
+        logger.info { "Request to create event, projectId: $projectId, event: $event" }
+
+        return eventRepository.create(
+            id = uuidProvider.getUuid(EventId),
+            projectId = projectId,
+            createdAt = utcDateTimeProvider.getUtcDateTime(),
+            event = event
+        )
+    }
+
+    override fun create(projectId: ProjectId, event: SdkErrorEventRequest): SdkErrorEvent {
         logger.info { "Request to create event, projectId: $projectId, event: $event" }
 
         return eventRepository.create(

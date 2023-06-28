@@ -3,6 +3,7 @@ package polyflow.config.validation
 object ValidationConstants {
     const val PASSWORD_MIN_LENGTH = 6
     const val REQUEST_BODY_MAX_STRING_LENGTH = 512
+    const val REQUEST_BODY_MAX_METADATA_STRING_LENGTH = 25_000
     const val REQUEST_BODY_MAX_LIST_SIZE = 250
     const val REQUEST_BODY_MAX_JSON_CHARS = 25_000
     const val REQUEST_BODY_MAX_FUNCTION_DATA_LENGTH = 5_000

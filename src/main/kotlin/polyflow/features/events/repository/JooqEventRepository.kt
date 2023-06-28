@@ -23,6 +23,7 @@ import polyflow.features.events.model.WalletState
 import polyflow.features.events.model.params.EventFilter
 import polyflow.features.events.model.request.BlockchainErrorEventRequest
 import polyflow.features.events.model.request.ErrorEventRequest
+import polyflow.features.events.model.request.SdkErrorEventRequest
 import polyflow.features.events.model.request.TxRequestEventRequest
 import polyflow.features.events.model.request.UserLandedEventRequest
 import polyflow.features.events.model.request.WalletConnectedEventRequest
@@ -41,6 +42,7 @@ import polyflow.features.events.model.response.EventResponse
 import polyflow.features.events.model.response.EventTrackerModelEventCounts
 import polyflow.features.events.model.response.EventTrackerModelUniqueValues
 import polyflow.features.events.model.response.NetworkStateEventCounts
+import polyflow.features.events.model.response.SdkErrorEvent
 import polyflow.features.events.model.response.TxRequestEvent
 import polyflow.features.events.model.response.UniqueValues
 import polyflow.features.events.model.response.UserLandedEvent
@@ -52,6 +54,7 @@ import polyflow.generated.jooq.tables.BlockchainErrorEventTable
 import polyflow.generated.jooq.tables.TxRequestEventTable
 import polyflow.generated.jooq.tables.records.BlockchainErrorEventRecord
 import polyflow.generated.jooq.tables.records.ErrorEventRecord
+import polyflow.generated.jooq.tables.records.SdkErrorEventRecord
 import polyflow.generated.jooq.tables.records.TxRequestEventRecord
 import polyflow.generated.jooq.tables.records.UserLandedEventRecord
 import polyflow.generated.jooq.tables.records.WalletConnectedEventRecord
@@ -430,6 +433,32 @@ class JooqEventRepository(private val dslContext: DSLContext) : EventRepository 
         return record.toModel()
     }
 
+    override fun create(
+        id: EventId,
+        projectId: ProjectId,
+        createdAt: UtcDateTime,
+        event: SdkErrorEventRequest
+    ): SdkErrorEvent {
+        logger.info { "Create event, id: $id, projectId: $projectId, createdAt: $createdAt, event: $event" }
+
+        val record = SdkErrorEventRecord(
+            id = id.value,
+            projectId = projectId,
+            createdAt = createdAt,
+            tracker = event.tracker.toRecord(
+                event.wallet?.walletAddress?.let { findUserIdByWalletAddress(WalletAddress(it)) }
+            ),
+            wallet = event.wallet?.toRecord(),
+            device = event.device?.toRecord(),
+            network = event.network?.toRecord(),
+            metadata = event.metadata
+        )
+
+        dslContext.executeInsert(record)
+
+        return record.toModel()
+    }
+
     override fun updateTxRequestEventTxStatus(id: EventId, projectId: ProjectId, newStatus: TxStatus): TxRequestEvent? {
         logger.info { "Update tx event tx status, id: $id, projectId: $projectId, newStatus: $newStatus" }
 
@@ -498,7 +527,8 @@ private fun EventTrackerModel.toRecord(overrideUserId: String?) =
         origin = origin,
         path = path,
         queryParams = query,
-        referrer = referrer
+        referrer = referrer,
+        sdkVersion = sdkVersion
     )
 
 private fun EventTrackerModelRecord.toModel() =
@@ -514,7 +544,8 @@ private fun EventTrackerModelRecord.toModel() =
         origin = origin,
         path = path,
         query = queryParams,
-        referrer = referrer
+        referrer = referrer,
+        sdkVersion = sdkVersion
     )
 
 private fun WalletState.toRecord() =
@@ -671,6 +702,18 @@ private fun UserLandedEventRecord.toModel() =
         wallet = wallet?.toModel(),
         device = device.toModel(),
         network = network?.toModel()
+    )
+
+private fun SdkErrorEventRecord.toModel() =
+    SdkErrorEvent(
+        id = id,
+        projectId = projectId,
+        createdAt = createdAt,
+        tracker = tracker.toModel(),
+        wallet = wallet?.toModel(),
+        device = device?.toModel(),
+        network = network?.toModel(),
+        metadata = metadata
     )
 
 // Kotlin bullshit: inline functions cannot be nested inside other functions
